@@ -1,0 +1,6 @@
+.claude
+data
+cookies.txt
+*.log
+__pycache__
+*.pyc

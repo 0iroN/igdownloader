@@ -1,0 +1,16 @@
+# Netscape HTTP Cookie File
+#
+# This is only a PLACEHOLDER. It contains no real cookies.
+#
+# To download login-walled Instagram posts, export YOUR OWN Instagram
+# cookies in Netscape format (e.g. with the "Get cookies.txt LOCALLY"
+# browser extension) and save the real file next to this one as:
+#
+#     data/cookies.txt
+#
+# The app picks it up automatically (see app.py -> find_cookies()).
+# Never share or commit your real cookies.txt — it grants access to your
+# Instagram account. The .gitignore already excludes data/cookies.txt.
+#
+# A real file would have one tab-separated cookie line per entry, e.g.:
+# .instagram.com	TRUE	/	TRUE	0	cookie_name	cookie_value

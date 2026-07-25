@@ -1,0 +1,32 @@
+# --- Secrets & runtime data (NEVER commit) ---
+# data/ holds your personal cookies.txt and downloaded files.
+data/*
+# ...but keep the example placeholder so users know where cookies go.
+!data/cookies.txt.example
+cookies.txt
+.env
+.env.*
+
+# --- Logs ---
+*.log
+
+# --- Editor / tooling config ---
+.claude/
+.vscode/
+.idea/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+ENV/
+
+# --- OS cruft ---
+.DS_Store
+Thumbs.db

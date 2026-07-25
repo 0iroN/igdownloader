@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video & Müzik İndir</title>
+  <style>
+    :root {
+      --bg: #0f0f14;
+      --card: #1a1a23;
+      --card2: #12121a;
+      --border: #2a2a36;
+      --text: #f2f2f5;
+      --muted: #9a9aa8;
+      --accent1: #f09433;
+      --accent2: #dc2743;
+      --accent3: #bc1888;
+      --yt: #ff0033;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(1200px 600px at 50% -10%, #241730 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .wrap { width: 100%; max-width: 540px; }
+    .logo {
+      width: 64px; height: 64px; margin: 0 auto 18px;
+      border-radius: 18px;
+      background: linear-gradient(45deg, var(--accent1), var(--accent2), var(--accent3));
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo svg { width: 32px; height: 32px; }
+    h1 { text-align: center; font-size: 1.5rem; font-weight: 700; }
+    .sub { text-align: center; color: var(--muted); margin: 6px 0 26px; font-size: 0.92rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
+    .row { display: flex; gap: 10px; }
+    input[type=text] {
+      flex: 1; padding: 13px 14px; border-radius: 11px;
+      border: 1px solid var(--border); background: var(--card2);
+      color: var(--text); font-size: 0.95rem; outline: none;
+    }
+    input[type=text]:focus { border-color: var(--accent3); }
+    button.primary {
+      padding: 13px 20px; border: none; border-radius: 11px;
+      font-size: 0.95rem; font-weight: 600; cursor: pointer; color: #fff;
+      background: linear-gradient(45deg, var(--accent2), var(--accent3));
+      transition: transform .08s ease, opacity .2s; white-space: nowrap;
+    }
+    button.primary:hover { opacity: .92; }
+    button.primary:active { transform: scale(.97); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .msg { margin-top: 14px; font-size: 0.9rem; min-height: 18px; }
+    .msg.error { color: #ff7a7a; }
+    .msg.info { color: var(--muted); }
+
+    .panel { margin-top: 18px; display: none; padding-top: 18px; border-top: 1px solid var(--border); }
+    .panel.show { display: block; }
+    .preview { display: flex; gap: 14px; align-items: center; }
+    .preview img { width: 96px; height: 96px; object-fit: cover; border-radius: 12px; background: #000; flex-shrink: 0; }
+    .preview .meta { flex: 1; min-width: 0; }
+    .preview .meta .t {
+      font-weight: 600; font-size: 0.95rem;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .preview .meta .u { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+    .badge { display: inline-block; font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; margin-top: 6px; font-weight: 600; }
+    .badge.youtube { background: rgba(255,0,51,.15); color: #ff5c78; }
+    .badge.instagram { background: rgba(188,24,136,.18); color: #e06bc0; }
+
+    .tabs { display: flex; gap: 8px; margin: 18px 0 14px; }
+    .tab {
+      flex: 1; text-align: center; padding: 11px; border-radius: 11px; cursor: pointer;
+      background: var(--card2); border: 1px solid var(--border); color: var(--muted);
+      font-size: 0.9rem; font-weight: 600; user-select: none; transition: .15s;
+    }
+    .tab.active { color: #fff; border-color: var(--accent3); background: rgba(188,24,136,.15); }
+
+    .opts { display: none; }
+    .opts.show { display: block; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
+    select {
+      width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--card2); color: var(--text); font-size: 0.92rem; outline: none;
+    }
+    select:focus { border-color: var(--accent3); }
+    .two { display: flex; gap: 10px; }
+    .two > .field { flex: 1; }
+
+    .dlbtn {
+      width: 100%; margin-top: 8px; padding: 13px; border: none; border-radius: 11px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer; color: #fff;
+      background: linear-gradient(45deg, var(--accent1), var(--accent2));
+    }
+    .dlbtn:hover { opacity: .92; }
+    .spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%; display: inline-block; animation: spin .7s linear infinite; vertical-align: -2px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .foot { text-align: center; color: var(--muted); font-size: 0.78rem; margin-top: 20px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="#fff"/></svg>
+    </div>
+    <h1>Video &amp; Müzik İndir</h1>
+    <p class="sub">YouTube veya Instagram bağlantısı yapıştır; kaliteyi seç, indir.</p>
+
+    <div class="card">
+      <div class="row">
+        <input id="url" type="text" placeholder="https://youtube.com/... veya instagram.com/reel/..." autocomplete="off" />
+        <button id="go" class="primary">Getir</button>
+      </div>
+      <div id="msg" class="msg"></div>
+
+      <!-- Önizleme + seçenekler -->
+      <div id="panel" class="panel">
+        <div class="preview">
+          <img id="thumb" alt="" />
+          <div class="meta">
+            <div id="title" class="t"></div>
+            <div id="uploader" class="u"></div>
+            <span id="badge" class="badge"></span>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <div id="tab-video" class="tab active" data-mode="video">🎬 Video</div>
+          <div id="tab-audio" class="tab" data-mode="audio">🎵 Müzik</div>
+        </div>
+
+        <!-- Video seçenekleri -->
+        <div id="opts-video" class="opts show">
+          <div class="field">
+            <label>Çözünürlük / Kalite</label>
+            <select id="vquality"></select>
+          </div>
+        </div>
+
+        <!-- Ses seçenekleri -->
+        <div id="opts-audio" class="opts">
+          <div class="two">
+            <div class="field">
+              <label>Format</label>
+              <select id="aformat">
+                <option value="mp3">MP3</option>
+                <option value="m4a">M4A</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Bit hızı (kalite)</label>
+              <select id="abitrate">
+                <option value="320">320 kbps (en yüksek)</option>
+                <option value="256">256 kbps</option>
+                <option value="192" selected>192 kbps</option>
+                <option value="128">128 kbps</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button id="dl" class="dlbtn">⬇ İndir</button>
+      </div>
+    </div>
+
+    <p class="foot">Yalnızca size ait olan veya izniniz olan içerikleri indirin.<br/>Telif hakkına saygılı olun.</p>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const urlInput = $("url"), goBtn = $("go"), msg = $("msg"), panel = $("panel");
+    let currentMode = "video";
+
+    function setMsg(html, type) { msg.className = "msg " + (type || ""); msg.innerHTML = html; }
+
+    function fmtDuration(s) {
+      if (!s) return "";
+      s = Math.round(s);
+      const m = Math.floor(s / 60), sec = String(s % 60).padStart(2, "0");
+      return ` · ${m}:${sec}`;
+    }
+
+    async function fetchInfo() {
+      const url = urlInput.value.trim();
+      panel.classList.remove("show");
+      if (!url) { setMsg("Lütfen bir bağlantı yapıştırın.", "error"); return; }
+
+      goBtn.disabled = true;
+      setMsg('<span class="spinner"></span> Bilgiler alınıyor...', "info");
+      try {
+        const res = await fetch("/api/info", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setMsg(data.error || "Bir hata oluştu.", "error"); return; }
+
+        $("thumb").src = data.thumbnail || "";
+        $("title").textContent = data.title || "Video";
+        $("uploader").textContent = (data.uploader ? data.uploader : "") + fmtDuration(data.duration);
+        const badge = $("badge");
+        badge.textContent = data.platform === "youtube" ? "YouTube" : "Instagram";
+        badge.className = "badge " + data.platform;
+
+        buildResolutions(data.resolutions || []);
+        panel.classList.add("show");
+        setMsg("Kaliteyi seç ve indir 👇", "info");
+      } catch (e) {
+        setMsg("Sunucuya ulaşılamadı.", "error");
+      } finally {
+        goBtn.disabled = false;
+      }
+    }
+
+    function buildResolutions(list) {
+      const sel = $("vquality");
+      sel.innerHTML = "";
+      const best = document.createElement("option");
+      best.value = "best"; best.textContent = "En iyi (otomatik)";
+      sel.appendChild(best);
+      list.forEach((h) => {
+        const o = document.createElement("option");
+        o.value = String(h);
+        o.textContent = h + "p" + (h >= 2160 ? " (4K)" : h >= 1440 ? " (2K)" : h >= 1080 ? " (Full HD)" : h >= 720 ? " (HD)" : "");
+        sel.appendChild(o);
+      });
+    }
+
+    // Sekme değişimi
+    document.querySelectorAll(".tab").forEach((t) => {
+      t.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((x) => x.classList.remove("active"));
+        t.classList.add("active");
+        currentMode = t.dataset.mode;
+        $("opts-video").classList.toggle("show", currentMode === "video");
+        $("opts-audio").classList.toggle("show", currentMode === "audio");
+      });
+    });
+
+    function buildDownloadUrl() {
+      const url = urlInput.value.trim();
+      const p = new URLSearchParams({ url, mode: currentMode });
+      if (currentMode === "audio") {
+        p.set("format", $("aformat").value);
+        p.set("quality", $("abitrate").value);
+      } else {
+        p.set("quality", $("vquality").value);
+        p.set("format", "mp4");
+      }
+      return "/api/download?" + p.toString();
+    }
+
+    async function download() {
+      const url = buildDownloadUrl();
+      const btn = $("dl");
+      btn.disabled = true;
+      setMsg('<span class="spinner"></span> İndiriliyor / hazırlanıyor… (kalite yükseldikçe biraz sürebilir)', "info");
+      try {
+        const res = await fetch(url);
+        if (!res.ok) { setMsg(await res.text() || "İndirme başarısız.", "error"); return; }
+        const blob = await res.blob();
+        const cd = res.headers.get("Content-Disposition") || "";
+        let name = "download";
+        const m = cd.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+        if (m) { try { name = decodeURIComponent(m[1]); } catch (e) { name = m[1]; } }
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        setMsg("İndirildi ✓ (" + (blob.size / 1048576).toFixed(1) + " MB)", "info");
+      } catch (e) {
+        setMsg("Sunucuya ulaşılamadı.", "error");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    goBtn.addEventListener("click", fetchInfo);
+    urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") fetchInfo(); });
+    $("dl").addEventListener("click", download);
+  </script>
+</body>
+</html>

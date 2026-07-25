@@ -1,0 +1,10 @@
+services:
+  igdownloader:
+    build: .
+    container_name: igdownloader
+    ports:
+      - "8600:8000"
+    restart: unless-stopped
+    volumes:
+      # cookies.txt'i buraya koyup `docker compose restart` ile etkinleştir.
+      - ./data:/data
