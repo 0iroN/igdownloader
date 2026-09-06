@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Video & Müzik İndir</title>
+  <script src="/ortak/kabuk.js" defer></script>
   <style>
     :root {
       --bg: #0f0f14;
@@ -607,7 +608,7 @@
       goBtn.disabled = true;
       setMsgHtml('<span class="spinner"></span> Bilgiler alınıyor...', "info");
       try {
-        const res = await fetch("/api/info", {
+        const res = await fetch("api/info", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url }),
@@ -692,7 +693,7 @@
         p.set("quality", $("vquality").value);
         p.set("format", "mp4");
       }
-      return "/api/download?" + p.toString();
+      return "api/download?" + p.toString();
     }
 
     async function download() {
@@ -869,7 +870,7 @@
       try {
         // Bu uç AĞA ÇIKMAZ: 25 bağlantı için önizleme sorgusu = tam olarak
         // kaçındığımız 429. Başlıklar indirme sırasında dolar.
-        const res = await fetch("/api/links/parse", {
+        const res = await fetch("api/links/parse", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text, mode: currentMode }),
@@ -960,7 +961,7 @@
       const pill = $("pill-list");
       pill.innerHTML = '<span class="spinner"></span> Liste alınıyor…';
       try {
-        const res = await fetch("/api/playlist/list", {
+        const res = await fetch("api/playlist/list", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url }),
@@ -1246,7 +1247,7 @@
       $("pl-start").disabled = true;
       setMsgHtml('<span class="spinner"></span> İndirme işi başlatılıyor…', "info");
       try {
-        const res = await fetch("/api/playlist/start", {
+        const res = await fetch("api/playlist/start", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -1288,7 +1289,7 @@
       $("pl-start").disabled = true;
       setMsgHtml('<span class="spinner"></span> İndirme işi başlatılıyor…', "info");
       try {
-        const res = await fetch("/api/links/start", {
+        const res = await fetch("api/links/start", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -1336,7 +1337,7 @@
         const kill = setTimeout(() => ctrl.abort(), 15000);
         let res;
         try {
-          res = await fetch("/api/playlist/status?job=" + encodeURIComponent(plJob),
+          res = await fetch("api/playlist/status?job=" + encodeURIComponent(plJob),
             { cache: "no-store", signal: ctrl.signal });
         } finally {
           clearTimeout(kill);
@@ -1423,7 +1424,7 @@
           cell.dataset.key = key;
           if (it.state === "ready") {
             const a = document.createElement("a");
-            a.href = "/api/playlist/file?job=" + encodeURIComponent(st.job) + "&i=" + it.index;
+            a.href = "api/playlist/file?job=" + encodeURIComponent(st.job) + "&i=" + it.index;
             a.setAttribute("download", "");
             a.title = "İndir";
             a.textContent = "⬇";
@@ -1538,7 +1539,7 @@
       const btn = $("pl-cancel");
       btn.disabled = true;
       try {
-        await fetch("/api/playlist/cancel", {
+        await fetch("api/playlist/cancel", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ job: plJob }),
@@ -1626,7 +1627,7 @@
       const job = plJob || plLastJob;
       if (!job) return;
       try {
-        await fetch("/api/playlist/discard", {
+        await fetch("api/playlist/discard", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ job }),
@@ -1810,7 +1811,7 @@
     /* ---- durum / kategori çipleri ---- */
     async function libLoadState() {
       try {
-        const res = await fetch("/api/library/state", { cache: "no-store" });
+        const res = await fetch("api/library/state", { cache: "no-store" });
         const d = await res.json();
         if (!d || !d.ok) return;
         libState = d;
@@ -2014,7 +2015,7 @@
       });
       if (libQ.col) p.set("col", libQ.col);
       try {
-        const res = await fetch("/api/library/items?" + p.toString(),
+        const res = await fetch("api/library/items?" + p.toString(),
           ctl ? { cache: "no-store", signal: ctl.signal } : { cache: "no-store" });
         const d = await res.json();
         if (nesil !== libGen) return;      // ESKİ NESİL: yanıt SESSİZCE atılır
@@ -2158,7 +2159,7 @@
           plat: i.platform || "youtube", kod: i.id, durum: i.state,
           boyut: i.size || null, hata: i.err || null,
         }));
-        fetch("/api/library/mark", {
+        fetch("api/library/mark", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ job: st.job, sonuclar }),
@@ -2192,7 +2193,7 @@
         // denemezsek kalan parçalar hiç gönderilmez ve 951 kaydın yarısı düşer.
         let d = null, res = null;
         for (let deneme = 0; deneme < 3; deneme++) {
-          res = await fetch("/api/library/import", {
+          res = await fetch("api/library/import", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -2263,7 +2264,7 @@
         // MEVCUT uç yeniden kullanılıyor — yeni sunucu kodu YOK. Uç POST-only
         // ve adresi JSON GÖVDESİNDEN okur (loadPlaylist ile AYNI sözleşme);
         // sorgu dizesiyle GET atmak 405 + HTML gövde döndürüyordu.
-        const res = await fetch("/api/playlist/list", {
+        const res = await fetch("api/playlist/list", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url }),
@@ -2292,7 +2293,7 @@
     /* ---- AI kategorilendirme ---- */
     async function libAiStart(kapsam) {
       try {
-        const res = await fetch("/api/library/ai/start", {
+        const res = await fetch("api/library/ai/start", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             kapsam: kapsam === "basarisiz" ? "basarisiz"
@@ -2317,7 +2318,7 @@
       const zaman = setTimeout(() => { try { libAiCtl.abort(); } catch (e) {} }, 15000);
       let d = null;
       try {
-        const res = await fetch("/api/library/ai/status", { cache: "no-store", signal: libAiCtl.signal });
+        const res = await fetch("api/library/ai/status", { cache: "no-store", signal: libAiCtl.signal });
         d = await res.json();
       } catch (e) { /* ağ dalgalanması: bir sonraki turda tekrar denenir */ }
       clearTimeout(zaman);
@@ -2363,7 +2364,7 @@
       const k = kapsam === "basarisiz" ? "basarisiz"
               : kapsam === "hepsi" ? "hepsi" : "eksik";
       try {
-        const res = await fetch("/api/library/covers/start", {
+        const res = await fetch("api/library/covers/start", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ kapsam: k }),
         });
@@ -2389,7 +2390,7 @@
       const zaman = setTimeout(() => { try { libCoverCtl.abort(); } catch (e) {} }, 15000);
       let d = null;
       try {
-        const res = await fetch("/api/library/covers/status",
+        const res = await fetch("api/library/covers/status",
           { cache: "no-store", signal: libCoverCtl.signal });
         d = await res.json();
       } catch (e) { /* ağ dalgalanması: sonraki turda tekrar denenir */ }
@@ -2427,7 +2428,7 @@
       kutu.classList.remove("hide");
       kutu.textContent = "Ölçülüyor…";
       try {
-        const res = await fetch("/api/library/scan", { cache: "no-store" });
+        const res = await fetch("api/library/scan", { cache: "no-store" });
         const d = await res.json();
         if (!res.ok || !d.ok) { kutu.textContent = (d && d.error) || "Ölçülemedi."; return; }
         const liste = (a, n) => (a || []).slice(0, n)
@@ -2466,7 +2467,7 @@
       const ids = [...libSel.values()].map((s) => s.id).filter(Boolean);
       if (!ids.length) { libMsg("Hiç kayıt seçilmedi.", "error"); return; }
       try {
-        const res = await fetch("/api/library/category", {
+        const res = await fetch("api/library/category", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ids: ids.slice(0, 500), kategori: $("lib-setcat-val").value }),
         });
@@ -2483,7 +2484,7 @@
       if (!ids.length) { libMsg("Hiç kayıt seçilmedi.", "error"); return; }
       if (!confirm(ids.length + " kayıt kitaplıktan silinsin mi?")) return;
       try {
-        const res = await fetch("/api/library/delete", {
+        const res = await fetch("api/library/delete", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ids: ids.slice(0, 500) }),
         });
@@ -2530,7 +2531,7 @@
     $("lib-scan").addEventListener("click", libScan);
     $("lib-cover-cancel").addEventListener("click", async () => {
       try {
-        await fetch("/api/library/covers/cancel", {
+        await fetch("api/library/covers/cancel", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ iptal: true }),
         });
@@ -2541,7 +2542,7 @@
       // JSON gövdesi + Content-Type: uç artık gövde bekliyor (siteler arası
       // düz <form> POST'u ön-uçuşa takılsın).
       try {
-        await fetch("/api/library/ai/cancel", {
+        await fetch("api/library/ai/cancel", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ iptal: true }),
         });
@@ -2621,7 +2622,7 @@
       if (!job) { try { job = localStorage.getItem("igd_job"); } catch (e) { job = null; } }
       if (!job || !JOB_RE.test(job)) return;
       try {
-        const res = await fetch("/api/playlist/status?job=" + job, { cache: "no-store" });
+        const res = await fetch("api/playlist/status?job=" + job, { cache: "no-store" });
         if (!res.ok) { try { localStorage.removeItem("igd_job"); } catch (e) {} return; }
         const st = await res.json();
         // Bağlantıyla gelinmediyse yalnız SÜREN işe geri bağlan: tek video
