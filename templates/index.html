@@ -58,6 +58,9 @@
     .msg { margin-top: 14px; font-size: 0.9rem; min-height: 18px; }
     .msg.error { color: #ff7a7a; }
     .msg.info { color: var(--muted); }
+    /* "tamamlandı ama N kayıt işlenemedi" durumu: hata değil ama sessiz de
+       geçilemez — koyu temada okunur bir kehribar. */
+    .msg.warn { color: #ffc766; }
 
     .panel { margin-top: 18px; display: none; padding-top: 18px; border-top: 1px solid var(--border); }
     .panel.show { display: block; }
@@ -103,6 +106,195 @@
       border-radius: 50%; display: inline-block; animation: spin .7s linear infinite; vertical-align: -2px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .foot { text-align: center; color: var(--muted); font-size: 0.78rem; margin-top: 20px; line-height: 1.5; }
+
+    /* ---- Oynatma listesi ---- */
+    .hide { display: none !important; }
+    .pills { display: flex; gap: 8px; margin-bottom: 14px; }
+    .pill {
+      flex: 1; text-align: center; padding: 9px; border-radius: 999px; cursor: pointer;
+      background: var(--card2); border: 1px solid var(--border); color: var(--muted);
+      font-size: 0.82rem; font-weight: 600; user-select: none; transition: .15s;
+    }
+    .pill.active { color: #fff; border-color: var(--accent3); background: rgba(188,24,136,.15); }
+
+    .pl { display: none; }
+    .pl.show { display: block; }
+    .pl-head .t { font-weight: 600; font-size: 0.95rem; }
+    .pl-head .u { color: var(--muted); font-size: 0.82rem; margin-top: 3px; }
+    .badge.list { background: rgba(240,148,51,.16); color: #f5b56b; }
+
+    .pl-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      margin: 12px 0 8px; font-size: 0.8rem; color: var(--muted); }
+    .pl-tools label { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+    .pl-range { display: flex; gap: 8px; margin-bottom: 10px; }
+    .pl-range input[type=text] { padding: 9px 10px; font-size: 0.83rem; }
+    .btn-sm {
+      padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--card2); color: var(--text); font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+    }
+    .btn-sm:hover { border-color: var(--accent3); }
+
+    .pl-list {
+      list-style: none; max-height: 46vh; overflow-y: auto;
+      border: 1px solid var(--border); border-radius: 12px; background: var(--card2);
+    }
+    .pl-row {
+      display: grid; grid-template-columns: 22px 24px 64px 1fr auto; gap: 8px;
+      align-items: center; padding: 7px 9px; border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .pl-row:last-child { border-bottom: none; }
+    .pl-row.dim { opacity: .42; }
+    .pl-row.na { opacity: .4; }
+    .pl-i { font-size: 0.7rem; color: var(--muted); text-align: right; }
+    .pl-th { width: 64px; height: 36px; object-fit: cover; border-radius: 6px; background: #000; }
+    .pl-th.ph { visibility: hidden; }
+    .pl-meta { min-width: 0; cursor: pointer; }
+    .pl-t { display: block; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pl-u { display: block; color: var(--muted); font-size: 0.71rem; margin-top: 2px; }
+    .pl-st { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+    .pl-st.err { color: #ff7a7a; }
+    .pl-st a { color: #7fd6a0; text-decoration: none; font-weight: 700; font-size: 0.85rem; }
+    .pl-rowbar { position: absolute; left: 0; bottom: 0; height: 2px; width: 0;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2)); }
+
+    .pl-progress { display: none; margin-top: 14px; font-size: 0.82rem; color: var(--muted); }
+    .pl-progress.show { display: block; }
+    .bar { height: 6px; border-radius: 999px; background: var(--card2);
+      border: 1px solid var(--border); overflow: hidden; margin-bottom: 6px; }
+    .bar > i { display: block; height: 100%; width: 0;
+      background: linear-gradient(45deg, var(--accent1), var(--accent2)); transition: width .3s; }
+
+    .hint { font-size: 0.75rem; color: var(--muted); margin-top: 10px; line-height: 1.45; }
+    .hint.warn { color: #ffcf7a; }
+    .sel-bad { color: #ff7a7a; font-weight: 700; }
+    .actions { display: flex; gap: 8px; }
+    .actions > button { flex: 1; }
+    .ghost { background: var(--card2); border: 1px solid var(--border); color: var(--text); }
+    .pl-results { display: none; margin-top: 12px; }
+    .pl-results.show { display: block; }
+    .pl-results .row2 { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ---- Çoklu bağlantı yapıştırma ---- */
+    textarea#multi-in {
+      width: 100%; background: var(--card2); border: 1px solid var(--border);
+      border-radius: 11px; color: var(--text); padding: 12px; resize: vertical;
+      font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; outline: none;
+    }
+    textarea#multi-in:focus { border-color: var(--accent3); }
+    .linkbtn {
+      background: none; border: none; color: var(--muted); font-size: .8rem;
+      text-decoration: underline dotted; cursor: pointer; margin-top: 10px; padding: 0;
+    }
+    .linkbtn:hover { color: var(--text); }
+    .bs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .bs-chip {
+      font-size: .72rem; padding: 3px 9px; border-radius: 999px; font-weight: 600;
+      background: var(--card2); border: 1px solid var(--border); color: var(--muted);
+    }
+    .bs-chip.yt { color: #ff5c78; }
+    .bs-chip.ig { color: #e06bc0; }
+    .bs-chip.drop { color: #9ec5ff; }
+    .bs-chip.warn { color: #ffcf7a; }
+    .batch-bad {
+      list-style: none; margin-top: 10px; border: 1px solid var(--border);
+      border-radius: 10px; background: var(--card2); max-height: 22vh; overflow-y: auto;
+    }
+    .bb-row { padding: 6px 9px; border-bottom: 1px solid var(--border); font-size: .74rem; }
+    .bb-row:last-child { border-bottom: none; }
+    .bb-txt { display: block; color: var(--muted); word-break: break-all; }
+    .bb-why { display: block; color: #ffcf7a; margin-top: 2px; }
+    .pl-th.tile {
+      display: flex; align-items: center; justify-content: center;
+      font-size: .62rem; font-weight: 700; color: #fff;
+    }
+    .pl-th.tile.ig { background: linear-gradient(45deg, var(--accent1), var(--accent2), var(--accent3)); }
+
+    /* ---- Kitaplık ---- */
+    .wrap.wide { max-width: 1100px; }
+    .viewtabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .vt {
+      flex: 1; text-align: center; padding: 10px; border-radius: 12px; cursor: pointer;
+      background: var(--card); border: 1px solid var(--border); color: var(--muted);
+      font-size: .9rem; font-weight: 600; user-select: none; transition: .15s;
+    }
+    .vt.active { color: #fff; border-color: var(--accent3); background: rgba(188,24,136,.15); }
+
+    .lib-box { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--card2); }
+    .lib-box > summary { cursor: pointer; font-weight: 600; font-size: .9rem; user-select: none; }
+    .lib-hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+    textarea#lib-import-text {
+      width: 100%; margin-top: 10px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 11px; color: var(--text); padding: 12px; resize: vertical;
+      font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .8rem; outline: none;
+    }
+    textarea#lib-import-text:focus { border-color: var(--accent3); }
+
+    .lib-toolbar {
+      position: sticky; top: 0; z-index: 5; background: var(--card);
+      padding: 10px 0; margin-top: 12px;
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    }
+    .lib-toolbar input[type=text] { min-width: 150px; }
+    .lib-toolbar select { width: auto; flex: 0 0 auto; }
+    .lib-toolbar .pills { margin-bottom: 0; }
+    .lib-toolbar .pill { flex: 0 0 auto; padding: 9px 14px; }
+    .lib-toolbar .hint { margin-top: 0; }
+
+    /* Ölçüm çıktısı: uzun olabilir, kendi içinde kaydırılır. */
+    .lib-scan {
+      max-height: 320px; overflow: auto; margin-top: 10px; padding: 10px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .72rem;
+      line-height: 1.45; white-space: pre-wrap; word-break: break-word; color: var(--text);
+    }
+
+    .lib-cats { display: flex; gap: 6px; overflow-x: auto; padding: 6px 0; }
+    .lib-chip {
+      white-space: nowrap; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+      border: 1px solid var(--border); background: var(--card2); color: var(--muted);
+      font-size: .75rem; user-select: none;
+    }
+    .lib-chip.active { color: #fff; border-color: var(--accent3); background: rgba(188,24,136,.15); }
+
+    .lib-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px; margin-top: 6px;
+    }
+    .lib-card {
+      position: relative; border: 1px solid var(--border); border-radius: 10px;
+      overflow: hidden; cursor: pointer; background: var(--card2);
+      content-visibility: auto; contain-intrinsic-size: auto 300px;
+    }
+    .lib-card.sel { outline: 2px solid var(--accent3); outline-offset: -2px; }
+    .lib-cov { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; display: block; background: #000; }
+    .lib-cov.tile {
+      display: flex; align-items: center; justify-content: center;
+      font-size: .7rem; font-weight: 700; color: #fff; text-align: center; word-break: break-all; padding: 6px;
+    }
+    .lib-cov.tile.ig { background: linear-gradient(45deg, var(--accent1), var(--accent2), var(--accent3)); }
+    .lib-cov.tile.yt { background: linear-gradient(45deg, #7a0018, var(--yt)); }
+    .lib-desc {
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; font-size: .72rem; padding: 6px; line-height: 1.35;
+    }
+    .lib-foot { display: flex; gap: 6px; align-items: center; padding: 0 6px 6px; flex-wrap: wrap; }
+    .lib-cat { font-size: .66rem; color: #e0a3d0; cursor: pointer; text-decoration: underline dotted; }
+    .lib-dl { font-size: .66rem; color: #7fd6a0; }
+    .lib-dl.bad { color: #ff7a7a; }
+    .lib-open {
+      position: absolute; top: 6px; right: 6px; font-size: .66rem; color: #fff;
+      background: rgba(0,0,0,.55); border-radius: 6px; padding: 2px 6px; text-decoration: none;
+    }
+
+    .lib-selbar {
+      position: sticky; bottom: 0; z-index: 5; background: var(--card);
+      border-top: 1px solid var(--border); margin-top: 12px;
+      padding: 10px 0; padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .8rem;
+    }
+    .lib-selbar select { width: auto; flex: 0 0 auto; padding: 8px 10px; font-size: .8rem; }
   </style>
 </head>
 <body>
@@ -113,21 +305,84 @@
     <h1>Video &amp; Müzik İndir</h1>
     <p class="sub">YouTube veya Instagram bağlantısı yapıştır; kaliteyi seç, indir.</p>
 
-    <div class="card">
-      <div class="row">
-        <input id="url" type="text" placeholder="https://youtube.com/... veya instagram.com/reel/..." autocomplete="off" />
-        <button id="go" class="primary">Getir</button>
+    <!-- ÜST SEVİYE SEKME: bugüne kadar yoktu. #src-switch (pill'ler) ve .tabs
+         (video/müzik) anlamlarıyla oynanmaz, bu ayrı bir katmandır. -->
+    <div id="viewtabs" class="viewtabs">
+      <div id="vt-download" class="vt active">⬇ İndir</div>
+      <div id="vt-library" class="vt">📚 Kitaplık</div>
+    </div>
+
+    <div class="card" id="view-download">
+      <div id="zone-single">
+        <div class="row">
+          <input id="url" type="text" placeholder="https://youtube.com/... veya instagram.com/reel/..." autocomplete="off" />
+          <button id="go" class="primary">Getir</button>
+        </div>
+        <button id="to-multi" class="linkbtn">📋 Birden çok bağlantı yapıştır</button>
       </div>
+
+      <!-- Çoklu bağlantı: alt alta yapıştır, hepsi sırayla insin -->
+      <div id="zone-multi" class="hide">
+        <textarea id="multi-in" rows="6" spellcheck="false"
+          placeholder="Her satıra bir bağlantı:&#10;https://www.instagram.com/reel/...&#10;https://youtu.be/...&#10;https://www.instagram.com/p/..."></textarea>
+        <div class="row" style="margin-top:10px">
+          <button id="multi-parse" class="primary" style="flex:1">Bağlantıları çöz</button>
+          <button id="to-single" class="btn-sm">Tek bağlantıya dön</button>
+        </div>
+      </div>
+
       <div id="msg" class="msg"></div>
 
       <!-- Önizleme + seçenekler -->
       <div id="panel" class="panel">
-        <div class="preview">
+        <!-- Bağlantıda liste varsa: tek video mu, liste mi? (varsayılan tek video) -->
+        <div id="src-switch" class="pills hide">
+          <div id="pill-single" class="pill active">🎬 Sadece bu video</div>
+          <div id="pill-list" class="pill">📃 Oynatma listesi</div>
+        </div>
+
+        <div id="single-preview" class="preview">
           <img id="thumb" alt="" />
           <div class="meta">
             <div id="title" class="t"></div>
             <div id="uploader" class="u"></div>
             <span id="badge" class="badge"></span>
+          </div>
+        </div>
+
+        <!-- Oynatma listesi görünümü -->
+        <div id="pl" class="pl">
+          <div class="pl-head">
+            <div id="pl-title" class="t"></div>
+            <div id="pl-owner" class="u"></div>
+            <span id="pl-badge" class="badge list"></span>
+          </div>
+
+          <!-- Çoklu bağlantı özeti + tanınmayan satırlar (yalnız batch modunda) -->
+          <div id="batch-summary" class="bs hide"></div>
+          <ul id="batch-bad" class="batch-bad hide"></ul>
+
+          <div class="pl-tools">
+            <label><input type="checkbox" id="pl-all" /> Tümü</label>
+            <span id="pl-selcount">0 seçildi</span>
+            <span id="pl-size"></span>
+          </div>
+
+          <div class="pl-range">
+            <input id="pl-range-in" type="text" placeholder="Aralık: 1-10, 15, 20-25" autocomplete="off" />
+            <button id="pl-range-go" class="btn-sm">Seç</button>
+            <button id="pl-invert" class="btn-sm">Ters çevir</button>
+          </div>
+
+          <ul id="pl-list" class="pl-list"></ul>
+
+          <div id="pl-progress" class="pl-progress" aria-live="polite">
+            <div class="bar"><i id="pl-bar"></i></div>
+            <div id="pl-progress-text"></div>
+          </div>
+
+          <div id="pl-note" class="hint">
+            Seçilen kalite üst sınırdır; o kaliteyi sunmayan videolar en yakın alt kaliteyle iner.
           </div>
         </div>
 
@@ -166,7 +421,138 @@
           </div>
         </div>
 
-        <button id="dl" class="dlbtn">⬇ İndir</button>
+        <div class="actions">
+          <button id="dl" class="dlbtn">⬇ İndir</button>
+          <button id="pl-start" class="dlbtn hide">⬇ Seçilenleri indir</button>
+          <button id="pl-cancel" class="dlbtn ghost hide">İptal</button>
+        </div>
+
+        <div id="pl-results" class="pl-results">
+          <div class="row2">
+            <button id="pl-seq" class="btn-sm">Hepsini sırayla indir</button>
+            <button id="pl-retry" class="btn-sm hide">Başarısızları tekrar dene</button>
+            <button id="pl-copylinks" class="btn-sm hide">Hazır olmayan bağlantıları kopyala</button>
+            <button id="pl-clear" class="btn-sm">Sunucudan sil</button>
+          </div>
+          <div class="hint">
+            Dosyalar 30 dakika sonra sunucudan otomatik silinir.
+            Tarayıcı birden fazla dosya indirme izni isteyebilir — “İzin Ver” deyin.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================
+         KİTAPLIK — #view-download'ın KARDEŞİ. İndirme kartının içeriğine
+         hiç dokunulmaz; ikisi showView() ile birbirini gizler.
+         =================================================================== -->
+    <div class="card hide" id="view-library">
+      <div id="lib-stale-bar" class="hint warn hide"></div>
+      <!-- #msg'DEN AYRI: AI turu ile indirme aynı anda çalışabildiği için
+           iki akış birbirinin durum metnini ezmemeli. -->
+      <div id="lib-msg" class="msg"></div>
+
+      <details id="lib-import" class="lib-box">
+        <summary>📥 İçe aktar</summary>
+        <div class="hint">
+          Instagram “kaydedilenler” listesini programatik olarak vermiyor.
+          Tarayıcı betiğinin ürettiği JSON'u aşağıya yapıştırın.
+          Kapaklar aktarımdan sonra “Kapakları indir” ile bir kez sunucuya
+          alınır ve orada kalır. Yeniden aktarımda kategoriler ile indirme
+          geçmişi KORUNUR; yalnız kapak adresi değişen kayıtların kapağı
+          yeniden indirilir.
+        </div>
+        <div class="row" style="margin-bottom:8px">
+          <input id="lib-import-file" type="file" accept=".json,application/json" />
+        </div>
+        <textarea id="lib-import-text" rows="5" spellcheck="false"
+          placeholder="Dosya seçin ya da betiğin ürettiği JSON'u buraya yapıştırın"></textarea>
+        <div class="row" style="margin-top:10px">
+          <input id="lib-import-name" type="text" value="Kaydedilenler" />
+          <button id="lib-import-go" class="primary">Aktar</button>
+        </div>
+        <div class="bar" style="margin-top:10px"><i id="lib-import-bar"></i></div>
+        <div id="lib-import-sum" class="hint"></div>
+        <ul id="lib-import-bad" class="batch-bad hide"></ul>
+        <hr class="lib-hr" />
+        <div class="row">
+          <input id="lib-import-yt" type="text" placeholder="YouTube oynatma listesi adresi" />
+          <button id="lib-import-ytgo" class="btn-sm">Listeyi aktar</button>
+        </div>
+      </details>
+
+      <div id="lib-toolbar" class="lib-toolbar">
+        <input id="lib-search" type="text" placeholder="Ara…" autocomplete="off" />
+        <div id="lib-f-plat" class="pills">
+          <div class="pill active" data-plat="all">Tümü</div>
+          <div class="pill" data-plat="instagram">Instagram</div>
+          <div class="pill" data-plat="youtube">YouTube</div>
+        </div>
+        <select id="lib-f-dl">
+          <option value="all">İndirme: tümü</option>
+          <option value="none">İndirilmemiş</option>
+          <option value="ready">İndirildi</option>
+          <option value="failed">Başarısız</option>
+        </select>
+        <select id="lib-sort">
+          <option value="yeni">Yeni → Eski</option>
+          <option value="eski">Eski → Yeni</option>
+          <option value="kategori">Kategoriye göre</option>
+        </select>
+        <button id="lib-reset" class="btn-sm">Temizle</button>
+        <button id="lib-ai" class="btn-sm">🤖 Kategorilendir</button>
+        <!-- ÇIKMAZDAN ÇIKIŞ: 'failed' / deneme kapısına dayanmış kalemler
+             normal turda BİR DAHA seçilmez; bu düğme olmadan geçersiz bir API
+             anahtarı tüm kitaplığı kalıcı olarak kategorisiz bırakıyordu. -->
+        <button id="lib-ai-retry" class="btn-sm hide">🔁 Tekrar dene</button>
+        <!-- 'diger' + 'belirsiz' kayıtları YIKICI OLMADAN yeniden sınıflandırır:
+             mevcut kategori yerinde durur, yalnız yeni sonuç gelince değişir. -->
+        <button id="lib-ai-again" class="btn-sm hide">🔁 Diğer/Belirsiz'i yeniden sınıflandır</button>
+        <span id="lib-ai-off" class="hint hide">AI kapalı (API anahtarı yok)</span>
+        <!-- KAPAK ÖNBELLEĞİ: maliyeti 0 USD, tek tık. -->
+        <button id="lib-cover" class="btn-sm hide">🖼 Kapakları indir</button>
+        <!-- ÖLÇÜM: AI çağrısı YOK, 0 USD. Taksonomi kararının girdisi. -->
+        <button id="lib-scan" class="btn-sm">🔎 Ölç</button>
+        <span id="lib-count" class="hint"></span>
+      </div>
+
+      <pre id="lib-scan-out" class="lib-scan hide"></pre>
+
+      <!-- .pl-progress varsayılanı display:none; .show ile açılır ("hide"
+           sınıfı EKLENMEZ, o !important olduğu için .show'u ezerdi). -->
+      <div id="lib-ai-bar" class="pl-progress">
+        <div class="bar"><i id="lib-ai-fill"></i></div>
+        <div class="row" style="align-items:center">
+          <span id="lib-ai-text" style="flex:1"></span>
+          <button id="lib-ai-cancel" class="btn-sm">Durdur</button>
+        </div>
+      </div>
+
+      <!-- Kapak turu AI turundan BAĞIMSIZ: ikisi aynı anda çalışabilir, bu
+           yüzden kendi şeridi var (birbirinin metnini ezmesin). -->
+      <div id="lib-cover-bar" class="pl-progress">
+        <div class="bar"><i id="lib-cover-fill"></i></div>
+        <div class="row" style="align-items:center">
+          <span id="lib-cover-text" style="flex:1"></span>
+          <button id="lib-cover-cancel" class="btn-sm">Durdur</button>
+        </div>
+      </div>
+
+      <div id="lib-cats" class="lib-cats"></div>
+      <div id="lib-grid" class="lib-grid"></div>
+      <div id="lib-sentinel"></div>
+      <button id="lib-more" class="btn-sm hide" style="width:100%;margin-top:10px">Daha fazla göster</button>
+      <div id="lib-empty" class="hint hide"></div>
+
+      <div id="lib-selbar" class="lib-selbar hide">
+        <span id="lib-selcount"></span>
+        <span id="lib-quota" class="hint" style="margin:0"></span>
+        <button id="lib-selpage" class="btn-sm">Sayfayı seç</button>
+        <select id="lib-setcat-val"></select>
+        <button id="lib-setcat" class="btn-sm">Kategori ata</button>
+        <button id="lib-delete" class="btn-sm">Sil</button>
+        <button id="lib-selclear" class="btn-sm">Temizle</button>
+        <button id="lib-download" class="dlbtn" style="width:auto;margin-top:0">⬇ İndirmeye aktar (0)</button>
       </div>
     </div>
 
@@ -178,7 +564,30 @@
     const urlInput = $("url"), goBtn = $("go"), msg = $("msg"), panel = $("panel");
     let currentMode = "video";
 
-    function setMsg(html, type) { msg.className = "msg " + (type || ""); msg.innerHTML = html; }
+    // Playlist durumu
+    let plHint = null;      // /api/info'dan gelen liste ipucu
+    let plData = null;      // /api/playlist/list yanıtı
+    let plJob = null;       // çalışan iş kimliği
+    let plTimer = null;     // poll zinciri (setInterval DEĞİL)
+    let plAnchor = null;    // shift+tıkla aralık başlangıcı
+    let singleRes = [];     // TEK videonun gerçek çözünürlükleri (liste ezmesin)
+    let plStaleHits = 0;    // üst üste kaç kez 'stale' raporlandı
+    let inputMode = "single";  // "single" | "multi" — yalnız GİRDİ kutusunu seçer
+    const plSel = new Set();
+
+    // #pl-note iki görünüm arasında paylaşılıyor: liste metnini geri koyabilmek
+    // için varsayılanı sabitliyoruz.
+    const PL_NOTE_DEFAULT =
+      "Seçilen kalite üst sınırdır; o kaliteyi sunmayan videolar en yakın alt kaliteyle iner.";
+    const PL_NOTE_BATCH =
+      "Bağlantılar tek tek, sırayla indirilir. Çözünürlük üst sınırdır; Instagram " +
+      "gönderilerinde çözünürlük seçimi genelde etkisizdir, mevcut kaliteyle iner. " +
+      "Süreler bilinmediği için boyut tahmini gösterilmiyor.";
+
+    // Varsayılan güvenli yol: DÜZ METİN. HTML gereken tek yer listError()'ın
+    // ürettiği "geri dön" düğmesidir; onun için ayrı bir işlev var.
+    function setMsg(text, type) { msg.className = "msg " + (type || ""); msg.textContent = text; }
+    function setMsgHtml(html, type) { msg.className = "msg " + (type || ""); msg.innerHTML = html; }
 
     function fmtDuration(s) {
       if (!s) return "";
@@ -188,12 +597,15 @@
     }
 
     async function fetchInfo() {
+      // İş sürerken yeni sorgu, ilerleme/İptal/⬇ bağlantılarını ekrandan
+      // silip işi izlenemez hâle getiriyordu.
+      if (plJob) { setMsg("Bir indirme sürüyor; bitmesini bekleyin veya İptal edin.", "error"); return; }
       const url = urlInput.value.trim();
       panel.classList.remove("show");
       if (!url) { setMsg("Lütfen bir bağlantı yapıştırın.", "error"); return; }
 
       goBtn.disabled = true;
-      setMsg('<span class="spinner"></span> Bilgiler alınıyor...', "info");
+      setMsgHtml('<span class="spinner"></span> Bilgiler alınıyor...', "info");
       try {
         const res = await fetch("/api/info", {
           method: "POST",
@@ -203,6 +615,22 @@
         const data = await res.json();
         if (!res.ok) { setMsg(data.error || "Bir hata oluştu.", "error"); return; }
 
+        // Çıplak liste sayfası: sunucu ağır çözümlemeyi hiç yapmadan
+        // "bu bir listedir" der; doğrudan liste görünümüne geçiyoruz.
+        if (data.type === "playlist") {
+          plHint = data.playlist_hint || null;
+          plData = null; plSel.clear(); plAnchor = null;
+          singleRes = [];
+          $("pl-list").innerHTML = "";
+          $("src-switch").classList.remove("hide");
+          // Bu adreste tek video yok (v= parametresi yok): o sekmeyi sunma.
+          $("pill-single").classList.add("hide");
+          panel.classList.add("show");
+          await loadPlaylist();
+          return;
+        }
+        $("pill-single").classList.remove("hide");
+
         $("thumb").src = data.thumbnail || "";
         $("title").textContent = data.title || "Video";
         $("uploader").textContent = (data.uploader ? data.uploader : "") + fmtDuration(data.duration);
@@ -210,7 +638,16 @@
         badge.textContent = data.platform === "youtube" ? "YouTube" : "Instagram";
         badge.className = "badge " + data.platform;
 
-        buildResolutions(data.resolutions || []);
+        singleRes = data.resolutions || [];
+        buildResolutions(singleRes);
+
+        // Playlist görünümünü sıfırla; bağlantıda liste varsa seçim pill'ini göster.
+        plHint = data.playlist_hint || null;
+        plData = null; plSel.clear(); plAnchor = null;
+        $("pl-list").innerHTML = "";
+        showSingleView();
+        $("src-switch").classList.toggle("hide", !plHint);
+
         panel.classList.add("show");
         setMsg("Kaliteyi seç ve indir 👇", "info");
       } catch (e) {
@@ -262,7 +699,7 @@
       const url = buildDownloadUrl();
       const btn = $("dl");
       btn.disabled = true;
-      setMsg('<span class="spinner"></span> İndiriliyor / hazırlanıyor… (kalite yükseldikçe biraz sürebilir)', "info");
+      setMsgHtml('<span class="spinner"></span> İndiriliyor / hazırlanıyor… (kalite yükseldikçe biraz sürebilir)', "info");
       try {
         const res = await fetch(url);
         if (!res.ok) { setMsg(await res.text() || "İndirme başarısız.", "error"); return; }
@@ -285,8 +722,1932 @@
     }
 
     goBtn.addEventListener("click", fetchInfo);
-    urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") fetchInfo(); });
+    // Enter, "Getir" düğmesiyle aynı kapıdan geçmeli: düğme kilitliyken
+    // Enter'la yeni sorgu açıp süren işi ekrandan silmek mümkün olmasın.
+    urlInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !goBtn.disabled) fetchInfo();
+    });
     $("dl").addEventListener("click", download);
+
+    /* =====================================================================
+       OYNATMA LİSTESİ
+       Tek video akışı (yukarıdaki download/buildDownloadUrl) hiç kullanılmaz.
+       ===================================================================== */
+    let plLastJob = null;     // biten işin kimliği (silme/sonuç için)
+    let plLastStatus = null;  // biten işin son durumu (tekrar dene için)
+
+    // Kaba boyut tahmini: dakika başına MB
+    const MB_PER_MIN = { 2160: 24, 1440: 14, 1080: 8, 720: 4, 480: 2, 360: 1.2, 240: 0.8, 144: 0.5 };
+    const JOB_RE = /^[0-9a-f]{32}$/;
+
+    function showSingleView() {
+      $("pl").classList.remove("show");
+      $("single-preview").classList.remove("hide");
+      $("pill-single").classList.add("active");
+      $("pill-list").classList.remove("active");
+      $("dl").classList.remove("hide");
+      $("pl-start").classList.add("hide");
+      $("pl-cancel").classList.add("hide");
+      $("pl-results").classList.remove("show");
+      $("pl-progress").classList.remove("show");
+      // Menü, liste yüklenince tam merdivenle ezilmiş olabilir: bu videonun
+      // gerçekten sunduğu kalitelere geri dön.
+      buildResolutions(singleRes);
+    }
+
+    function showListView() {
+      $("pl").classList.add("show");
+      $("single-preview").classList.add("hide");
+      $("src-switch").classList.remove("hide");
+      $("pill-list").classList.add("active");
+      $("pill-single").classList.remove("active");
+      $("dl").classList.add("hide");
+      $("pl-start").classList.remove("hide");
+      $("batch-summary").classList.add("hide");
+      $("batch-bad").classList.add("hide");
+      $("pl-note").textContent = PL_NOTE_DEFAULT;
+      if (plData) buildResolutions(plData.resolutions || []);
+      // Biten işin sonuç düğmeleri (toplu indir / sil) görünümler arasında
+      // gidip gelince kaybolmasın.
+      if (!plJob && plLastStatus) $("pl-results").classList.add("show");
+    }
+
+    /* ---------------------------------------------------------------------
+       ÇOKLU BAĞLANTI YAPIŞTIRMA
+       Tek video ve oynatma listesi yolları bu bloktan HİÇ etkilenmez;
+       tek dal noktası plData.kind === "links" (ve status.json'da st.kind).
+       --------------------------------------------------------------------- */
+    function isBatch() { return !!(plData && plData.kind === "links"); }
+
+    function showBatchView() {
+      $("pl").classList.add("show");
+      $("single-preview").classList.add("hide");
+      // #src-switch'in anlamı "BU tek bağlantı video mu liste mi?" — burada yok.
+      $("src-switch").classList.add("hide");
+      $("dl").classList.add("hide");
+      $("pl-start").classList.remove("hide");
+      $("pl-title").textContent = (plData && plData.title) || "Yapıştırılan bağlantılar";
+      $("pl-owner").textContent = "";
+      $("pl-badge").textContent =
+        "Çoklu bağlantı · " + ((plData && plData.entries.length) || 0) + " öğe";
+      $("pl-note").textContent = PL_NOTE_BATCH;
+      buildResolutions((plData && plData.resolutions) || []);
+      renderBatchSummary();
+      if (!plJob && plLastStatus) $("pl-results").classList.add("show");
+    }
+
+    function renderBatchSummary() {
+      const box = $("batch-summary");
+      box.innerHTML = "";
+      if (!isBatch()) {
+        box.classList.add("hide");
+        $("batch-bad").classList.add("hide");
+        return;
+      }
+      const s = plData.summary || {};
+      const chip = (cls, n, label) => {
+        if (!n) return;
+        const el = document.createElement("span");
+        el.className = "bs-chip " + cls;
+        const b = document.createElement("b");
+        b.textContent = String(n);
+        el.appendChild(b);
+        el.appendChild(document.createTextNode(" " + label));
+        box.appendChild(el);
+      };
+      chip("yt", s.yt, "YouTube");
+      chip("ig", s.ig, "Instagram");
+      chip("drop", s.dup, "yinelenen");
+      chip("warn", s.bad, "tanınmadı");
+      box.classList.toggle("hide", box.children.length === 0);
+      renderRejected(plData.rejected || []);
+    }
+
+    // Reddedilen satırlar AYRI listede: #pl-list satırları işin sözleşmesidir
+    // (data-idx taşır, patchRows onlara yazar); indeksi olmayan satır oraya girmez.
+    function renderRejected(list) {
+      const ul = $("batch-bad");
+      ul.innerHTML = "";
+      if (!list || !list.length) { ul.classList.add("hide"); return; }
+      list.forEach((r) => {
+        const li = document.createElement("li");
+        li.className = "bb-row";
+        const a = document.createElement("span");
+        a.className = "bb-txt";
+        a.textContent = r.raw || "";          // innerHTML ASLA
+        const b = document.createElement("span");
+        b.className = "bb-why";
+        b.textContent = r.reason || "";
+        li.appendChild(a); li.appendChild(b);
+        ul.appendChild(li);
+      });
+      ul.classList.remove("hide");
+    }
+
+    function showMultiInput() {
+      if (plJob) { setMsg("Bir indirme sürüyor; bitmesini bekleyin veya İptal edin.", "error"); return; }
+      inputMode = "multi";
+      $("zone-single").classList.add("hide");
+      $("zone-multi").classList.remove("hide");
+      $("multi-in").focus();
+    }
+
+    function showSingleInput() {
+      inputMode = "single";
+      $("zone-multi").classList.add("hide");
+      $("zone-single").classList.remove("hide");
+    }
+
+    async function parseLinks() {
+      if (plJob) { setMsg("Bir indirme sürüyor; bitmesini bekleyin veya İptal edin.", "error"); return; }
+      const text = $("multi-in").value;
+      if (!text.trim()) { setMsg("Önce bağlantıları yapıştırın.", "error"); return; }
+
+      const btn = $("multi-parse");
+      btn.disabled = true;
+      setMsgHtml('<span class="spinner"></span> Bağlantılar çözümleniyor…', "info");
+      try {
+        // Bu uç AĞA ÇIKMAZ: 25 bağlantı için önizleme sorgusu = tam olarak
+        // kaçındığımız 429. Başlıklar indirme sırasında dolar.
+        const res = await fetch("/api/links/parse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, mode: currentMode }),
+        });
+        const d = await res.json();
+        if (!res.ok) {
+          let t = d.error || "Bağlantılar çözümlenemedi.";
+          const bad = (d && d.rejected) || [];
+          if (bad.length) t += " (" + bad[0].reason + ")";
+          setMsg(t, "error");
+          return;
+        }
+
+        plData = {
+          kind: "links",
+          title: "Yapıştırılan bağlantılar",
+          uploader: "",
+          count: d.count,
+          url: "",
+          resolutions: d.resolutions || [],
+          max_select: d.max_select || { video: 25, audio: 50 },
+          // Sunucunun Instagram alt kotası (/api/links/start bunu aşarsa 400
+          // döner). Arayüz bunu okumazsa 21. IG bağlantısı ancak İndir'e
+          // basıldığında reddediliyor ve kullanıcı çıkmaza giriyordu.
+          max_ig: (typeof d.max_ig === "number" && d.max_ig > 0) ? d.max_ig : 20,
+          rejected: d.rejected || [],
+          summary: {
+            yt: (d.count || 0) - (d.ig_count || 0),
+            ig: d.ig_count || 0,
+            dup: d.duplicates || 0,
+            bad: (d.rejected || []).length,
+          },
+          entries: (d.items || []).map((i) => ({
+            index: i.index, id: i.id, platform: i.platform, url: i.url,
+            title: i.title, duration: null, uploader: "", unavailable: false,
+          })),
+        };
+        plLastStatus = null; plLastJob = null; plAnchor = null;
+        $("pl-results").classList.remove("show");
+        $("pl-progress").classList.remove("show");
+
+        // Derlemeyi kullanıcı kopyalayarak ZATEN yaptı: hepsi önceden işaretli.
+        // Sayı limiti aşarsa yalnız ilk N — yoksa düğme kilitli kalırdı.
+        // Instagram alt kotası da burada uygulanır: kotayı aşan IG kalemleri
+        // işaretsiz kalır, YouTube kalemleri limite kadar işaretlenmeye devam eder.
+        const lim = selLimit();
+        const igLim = igLimit();
+        let igUsed = 0;
+        plSel.clear();
+        plData.entries.forEach((e) => {
+          if (plSel.size >= lim) return;
+          if (e.platform === "instagram") {
+            if (igUsed >= igLim) return;
+            igUsed++;
+          }
+          plSel.add(e.index);
+        });
+
+        renderRows();
+        showBatchView();
+        panel.classList.add("show");
+        syncChecks();
+        updateSelUI();
+
+        if ((d.ig_count || 0) > igLim) {
+          setMsg("Tek işte en fazla " + igLim + " Instagram bağlantısı indirilebilir " +
+            "(şu an " + d.ig_count + "): ilk " + igLim + " Instagram bağlantısı seçildi, " +
+            "kalanları ikinci turda indirin.", "info");
+        } else if (plData.entries.length > lim) {
+          setMsg("İlk " + lim + " seçildi (" +
+            (currentMode === "audio" ? "müzik" : "video") +
+            " modunda tek seferde en fazla " + lim + "). Kalanları ikinci turda indirin.", "info");
+        } else if (d.truncated) {
+          setMsg("Çok fazla bağlantı vardı, ilk " + d.scanned + " tanesi tarandı.", "info");
+        } else {
+          setMsg(plData.entries.length + " bağlantı hazır. Kaliteyi ayarlayıp indirin 👇", "info");
+        }
+      } catch (e) {
+        setMsg("Sunucuya ulaşılamadı.", "error");
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function loadPlaylist() {
+      if (plJob) return;
+      const url = urlInput.value.trim();
+      const pill = $("pill-list");
+      pill.innerHTML = '<span class="spinner"></span> Liste alınıyor…';
+      try {
+        const res = await fetch("/api/playlist/list", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const d = await res.json();
+        if (!res.ok) { listError(d.error || "Liste alınamadı."); return; }
+
+        plData = d; plData.url = url; plSel.clear(); plAnchor = null;
+        // Biten BİR ÖNCEKİ işin izleri taze listeye sızmasın: parseLinks() bu
+        // temizliği zaten yapıyordu, burada eksikti ve biten bir çoklu-bağlantı
+        // işinden sonra "Başarısızları tekrar dene" düğmesi listenin altında
+        // görünüp yeni yüklenen listeyi ezerek ESKİ bağlantıları indiriyordu.
+        plLastStatus = null; plLastJob = null;
+        $("pl-results").classList.remove("show");
+        $("pl-retry").classList.add("hide");
+        $("pl-copylinks").classList.add("hide");
+        $("pl-title").textContent = d.title || "Oynatma Listesi";
+        $("pl-owner").textContent = d.uploader || "";
+        $("pl-badge").textContent = "Oynatma Listesi · " + d.count + " video";
+        buildResolutions(d.resolutions || []);
+        renderRows();
+        showListView();
+        updateSelUI();
+        setMsg(
+          (d.truncated ? "İlk " + d.count + " video listelendi. " : "") +
+          "İndirmek istediklerini seç, kaliteyi ayarla 👇", "info"
+        );
+      } catch (e) {
+        setMsg("Sunucuya ulaşılamadı.", "error");
+      } finally {
+        pill.textContent = "📃 Oynatma listesi";
+      }
+    }
+
+    // Desteklenmeyen liste: çıkmaz sokak değil, tek videoya dönüş yolu sun.
+    function listError(text) {
+      setMsgHtml(text + ' <button id="pl-fallback" class="btn-sm">Sadece bu videoyu indir</button>', "error");
+      const btn = $("pl-fallback");
+      if (btn) btn.addEventListener("click", () => {
+        urlInput.value = urlInput.value.replace(/([?&])list=[^&]*/i, "$1").replace(/[?&]$/, "");
+        fetchInfo();
+      });
+    }
+
+    function renderRows() {
+      const list = $("pl-list");
+      list.innerHTML = "";
+      const frag = document.createDocumentFragment();
+      const batch = isBatch();
+      plData.entries.forEach((e) => {
+        const li = document.createElement("li");
+        li.className = "pl-row" + (e.unavailable ? " na" : "");
+        li.dataset.idx = e.index;
+        // Instagram'da küçük resim için API çağrısı YOK: aynı 64x36 kutuda
+        // rozet gösteriyoruz (YouTube tarafı bugünkü i.ytimg numarasını korur).
+        const thumb = (!batch || e.platform === "youtube")
+          ? '<img class="pl-th" loading="lazy" width="64" height="36" alt="" ' +
+            'src="https://i.ytimg.com/vi/' + encodeURIComponent(e.id) + '/mqdefault.jpg" ' +
+            'onerror="this.classList.add(\'ph\')" />'
+          : '<span class="pl-th tile ig">IG</span>';
+        li.innerHTML =
+          '<input type="checkbox" class="pl-chk"' + (e.unavailable ? " disabled" : "") + ' />' +
+          '<span class="pl-i">' + String(e.index).padStart(2, "0") + '</span>' +
+          thumb +
+          '<label class="pl-meta"><span class="pl-t"></span><span class="pl-u"></span></label>' +
+          '<span class="pl-st">' + (e.unavailable ? "erişilemiyor" : "bekliyor") + '</span>' +
+          '<i class="pl-rowbar"></i>';
+        li.querySelector(".pl-t").textContent = e.title || "";
+        li.querySelector(".pl-meta").title = e.title || "";
+        li.querySelector(".pl-u").textContent = batch
+          ? (e.platform === "instagram" ? "Instagram gönderisi" : "YouTube videosu")
+          : (e.uploader || "") + fmtDuration(e.duration);
+        frag.appendChild(li);
+      });
+      list.appendChild(frag);
+    }
+
+    function syncChecks() {
+      document.querySelectorAll(".pl-row").forEach((row) => {
+        const idx = Number(row.dataset.idx);
+        const chk = row.querySelector(".pl-chk");
+        if (chk) chk.checked = plSel.has(idx);
+        row.classList.toggle("dim", !!plJob && !plSel.has(idx));
+      });
+    }
+
+    function selLimit() {
+      const m = (plData && plData.max_select) || { video: 25, audio: 50 };
+      return currentMode === "audio" ? m.audio : m.video;
+    }
+
+    // Sunucudaki Instagram alt kotası (MAX_IG_PER_JOB). Oynatma listesi yolunda
+    // hiç Instagram kalemi olmadığı için bu sayacın etkisi yoktur.
+    function igLimit() {
+      const v = plData && plData.max_ig;
+      return (typeof v === "number" && v > 0) ? v : 20;
+    }
+
+    function selectedIgCount() {
+      if (!plData || !isBatch()) return 0;
+      return plData.entries.filter(
+        (e) => e.platform === "instagram" && plSel.has(e.index)
+      ).length;
+    }
+
+    function estimateMB() {
+      let mins = 0;
+      plData.entries.forEach((e) => { if (plSel.has(e.index)) mins += (e.duration || 240) / 60; });
+      let perMin;
+      if (currentMode === "audio") {
+        perMin = (parseInt($("abitrate").value, 10) || 192) * 60 / 8 / 1024;
+      } else {
+        const q = $("vquality").value;
+        perMin = MB_PER_MIN[q === "best" ? 1080 : parseInt(q, 10)] || 8;
+      }
+      return mins * perMin;
+    }
+
+    let limitWarned = false;
+
+    function updateSelUI() {
+      if (!plData) return;
+      const n = plSel.size, lim = selLimit();
+      const cnt = $("pl-selcount");
+      cnt.textContent = n + " / " + plData.entries.length + " seçildi";
+      cnt.classList.toggle("sel-bad", n > lim || selectedIgCount() > igLimit());
+
+      if (isBatch()) {
+        // Süreleri bilmiyoruz (probe yapmadık): uydurma süreyle üretilen
+        // 10 kat şişik bir tahmin, hiç göstermemekten kötüdür.
+        $("pl-size").textContent = "";
+      } else {
+        const mb = estimateMB();
+        $("pl-size").textContent = n
+          ? "~" + (mb > 1024 ? (mb / 1024).toFixed(1) + " GB" : Math.round(mb) + " MB") + " (kaba tahmin)"
+          : "";
+      }
+
+      const btn = $("pl-start");
+      // Instagram alt kotası sunucuda da denetleniyor (/api/links/start → 400).
+      // Burada da uygulayarak kullanıcıyı o 400'e hiç düşürmüyoruz.
+      const ig = selectedIgCount(), igLim = igLimit();
+      btn.textContent = "⬇ Seçilenleri indir" + (n ? " (" + n + ")" : "");
+      btn.disabled = !!plJob || n === 0 || n > lim || ig > igLim;
+      if (n > lim) {
+        limitWarned = true;
+        setMsg("En fazla " + lim + " video seçebilirsiniz (şu an " + n + ") — aralıkla bölerek indirin.", "error");
+      } else if (ig > igLim) {
+        limitWarned = true;
+        setMsg("Tek işte en fazla " + igLim + " Instagram bağlantısı seçebilirsiniz (şu an " +
+          ig + ") — fazlasının işaretini kaldırıp ikinci turda indirin.", "error");
+      } else if (limitWarned) {
+        // Seçim limitin altına indiğinde kırmızı uyarı ekranda kalmasın.
+        limitWarned = false;
+        setMsg("İndirmek istediklerini seç, kaliteyi ayarla 👇", "info");
+      }
+
+      const avail = plData.entries.filter((e) => !e.unavailable).length;
+      const all = $("pl-all");
+      all.checked = n > 0 && n >= avail;
+      all.indeterminate = n > 0 && n < avail;
+    }
+
+    function setSel(idx, on) {
+      if (on) plSel.add(idx); else plSel.delete(idx);
+    }
+
+    // Satır seçimi: tıklama alanı tüm satır, shift ile aralık.
+    $("pl-list").addEventListener("click", (ev) => {
+      if (plJob || !plData) return;
+      // ⬇ indirme bağlantısına basmak satırın seçimini değiştirmesin.
+      if (ev.target.closest("a")) return;
+      const row = ev.target.closest(".pl-row");
+      if (!row || row.classList.contains("na")) return;
+      const idx = Number(row.dataset.idx);
+      const chk = row.querySelector(".pl-chk");
+      const on = ev.target === chk ? chk.checked : !plSel.has(idx);
+      if (ev.shiftKey && plAnchor !== null) {
+        const lo = Math.min(plAnchor, idx), hi = Math.max(plAnchor, idx);
+        plData.entries.forEach((e) => {
+          if (!e.unavailable && e.index >= lo && e.index <= hi) setSel(e.index, on);
+        });
+      } else {
+        setSel(idx, on);
+        plAnchor = idx;
+      }
+      syncChecks();
+      updateSelUI();
+    });
+
+    $("pl-all").addEventListener("change", () => {
+      if (plJob || !plData) return;
+      const on = $("pl-all").checked;
+      plSel.clear();
+      if (on) plData.entries.forEach((e) => { if (!e.unavailable) plSel.add(e.index); });
+      syncChecks(); updateSelUI();
+    });
+
+    // "1-10, 15, 20-25" biçimi — mobilde shift olmadığı için şart.
+    function parseRange(text) {
+      const out = new Set();
+      (text || "").split(",").forEach((part) => {
+        const m = part.trim().match(/^(\d+)\s*(?:-\s*(\d+))?$/);
+        if (!m) return;
+        const a = parseInt(m[1], 10), b = m[2] ? parseInt(m[2], 10) : a;
+        for (let i = Math.min(a, b); i <= Math.max(a, b); i++) out.add(i);
+      });
+      return out;
+    }
+
+    $("pl-range-go").addEventListener("click", () => {
+      if (plJob || !plData) return;
+      const want = parseRange($("pl-range-in").value);
+      if (!want.size) { setMsg("Aralığı '1-10, 15, 20-25' biçiminde yazın.", "error"); return; }
+      plData.entries.forEach((e) => { if (!e.unavailable && want.has(e.index)) plSel.add(e.index); });
+      syncChecks(); updateSelUI();
+    });
+
+    $("pl-invert").addEventListener("click", () => {
+      if (plJob || !plData) return;
+      plData.entries.forEach((e) => {
+        if (e.unavailable) return;
+        if (plSel.has(e.index)) plSel.delete(e.index); else plSel.add(e.index);
+      });
+      syncChecks(); updateSelUI();
+    });
+
+    function lockUI(on) {
+      goBtn.disabled = on;
+      urlInput.disabled = on;
+      $("pl-cancel").classList.toggle("hide", !on);
+      $("pl-start").disabled = on;
+      $("pl-all").disabled = on;
+      $("pl-range-go").disabled = on;
+      $("pl-invert").disabled = on;
+      $("vquality").disabled = on;
+      $("aformat").disabled = on;
+      $("abitrate").disabled = on;
+      // İş sürerken yeni liste çözümlenirse ekrandaki iş izlenemez hâle gelir
+      // (fetchInfo'nun ayrıca önlediği hatanın arka kapısı).
+      $("multi-in").disabled = on;
+      $("multi-parse").disabled = on;
+      $("to-multi").disabled = on;
+      $("to-single").disabled = on;
+      document.querySelectorAll(".pl-row").forEach((row) => {
+        const chk = row.querySelector(".pl-chk");
+        if (chk && !row.classList.contains("na")) chk.disabled = on;
+      });
+      // KİTAPLIK: iş başlatan düğmeler de kilitlenir. #vt-library sekmesi AÇIK
+      // KALIR — izlemek engellenmez, yalnız ikinci bir iş denemesi önlenir.
+      ["lib-import-go", "lib-import-ytgo", "lib-ai", "lib-ai-retry", "lib-ai-again",
+       "lib-cover", "lib-download",
+       "lib-selpage", "lib-setcat", "lib-delete"].forEach((id) => {
+        const el = $(id); if (el) el.disabled = on;
+      });
+      syncChecks();
+      if (!on) updateSelUI();
+    }
+
+    async function startJob() {
+      if (!plData || plJob) return;
+      const items = plData.entries
+        .filter((e) => plSel.has(e.index) && !e.unavailable)
+        .map((e) => ({ index: e.index, id: e.id, title: e.title, duration: e.duration }));
+      if (!items.length) { setMsg("Hiç video seçilmedi.", "error"); return; }
+
+      // Sayfa yenilenip işe geri bağlanıldığında kutu boş olabilir: liste
+      // bağlantısını status.json'dan / yüklenen listeden tamamlıyoruz.
+      const jobUrl = urlInput.value.trim()
+        || (plData && plData.url)
+        || (plLastStatus && plLastStatus.url)
+        || "";
+      if (!jobUrl) { setMsg("Liste bağlantısını tekrar yapıştırıp 'Getir'e basın.", "error"); return; }
+      const body = { url: jobUrl, mode: currentMode, items };
+      if (currentMode === "audio") {
+        body.format = $("aformat").value;
+        body.quality = $("abitrate").value;
+      } else {
+        body.format = "mp4";
+        body.quality = $("vquality").value;
+      }
+
+      $("pl-start").disabled = true;
+      setMsgHtml('<span class="spinner"></span> İndirme işi başlatılıyor…', "info");
+      try {
+        const res = await fetch("/api/playlist/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const d = await res.json();
+        if (!res.ok) { setMsg(d.error || "İş başlatılamadı.", "error"); updateSelUI(); return; }
+        plJob = d.job;
+        plLastJob = d.job;
+        plStaleHits = 0;
+        try { localStorage.setItem("igd_job", plJob); } catch (e) {}
+        history.replaceState(null, "", "#job=" + plJob);
+        $("pl-results").classList.remove("show");
+        $("pl-progress").classList.add("show");
+        lockUI(true);
+        setMsg("İndirme başladı. Biten dosyalar listede ⬇ olarak görünür. Bu sekmeyi açık bırakın.", "info");
+        pollOnce();
+      } catch (e) {
+        setMsg("Sunucuya ulaşılamadı.", "error");
+        updateSelUI();
+      }
+    }
+
+    // startJob()'un kardeşi: gövde farklı, sonrası (poll/applyStatus/finishJob)
+    // birebir aynı çünkü /api/links/start aynı yanıt gövdesini döner.
+    async function startLinksJob() {
+      if (!plData || plJob) return;
+      const chosen = plData.entries.filter((e) => plSel.has(e.index));
+      if (!chosen.length) { setMsg("Hiç bağlantı seçilmedi.", "error"); return; }
+
+      const body = { links: chosen.map((e) => e.url), mode: currentMode };
+      if (currentMode === "audio") {
+        body.format = $("aformat").value;
+        body.quality = $("abitrate").value;
+      } else {
+        body.format = "mp4";
+        body.quality = $("vquality").value;
+      }
+
+      $("pl-start").disabled = true;
+      setMsgHtml('<span class="spinner"></span> İndirme işi başlatılıyor…', "info");
+      try {
+        const res = await fetch("/api/links/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const d = await res.json();
+        if (!res.ok) { setMsg(d.error || "İş başlatılamadı.", "error"); updateSelUI(); return; }
+
+        // index'i SUNUCU 1..N yoğun olarak atar. Seçim bir alt küme ise
+        // satırları da yeniden numaralandırmalıyız, yoksa patchRows'un
+        // data-idx eşleşmesi tutmaz ve ilerleme hiç görünmez.
+        plData.entries = chosen.map((e, i) => Object.assign({}, e, { index: i + 1 }));
+        plData.summary = {
+          yt: plData.entries.filter((e) => e.platform === "youtube").length,
+          ig: plData.entries.filter((e) => e.platform === "instagram").length,
+          dup: (plData.summary && plData.summary.dup) || 0,
+          bad: (plData.summary && plData.summary.bad) || 0,
+        };
+        plSel.clear();
+        plData.entries.forEach((e) => plSel.add(e.index));
+        renderRows();
+        renderBatchSummary();
+
+        plJob = d.job;
+        plLastJob = d.job;
+        plStaleHits = 0;
+        try { localStorage.setItem("igd_job", plJob); } catch (e) {}
+        history.replaceState(null, "", "#job=" + plJob);
+        $("pl-results").classList.remove("show");
+        $("pl-progress").classList.add("show");
+        lockUI(true);
+        setMsg("İndirme başladı. Biten dosyalar listede ⬇ olarak görünür. Bu sekmeyi açık bırakın.", "info");
+        pollOnce();
+      } catch (e) {
+        setMsg("Sunucuya ulaşılamadı.", "error");
+        updateSelUI();
+      }
+    }
+
+    async function pollOnce() {
+      if (!plJob) return;
+      try {
+        // Zaman aşımı ŞART: worker havuzu dolu olduğunda tek bir askıda kalan
+        // istek zinciri durdurur, o da işçiye "kimse izlemiyor" dedirtirdi.
+        const ctrl = new AbortController();
+        const kill = setTimeout(() => ctrl.abort(), 15000);
+        let res;
+        try {
+          res = await fetch("/api/playlist/status?job=" + encodeURIComponent(plJob),
+            { cache: "no-store", signal: ctrl.signal });
+        } finally {
+          clearTimeout(kill);
+        }
+        if (res.status === 404) { jobGone(); return; }
+        const st = await res.json();
+        applyStatus(st);
+        if (st.state === "stale") {
+          // Kalp atışı gecikmesi kalıcı olmayabilir (makine uykudan uyanmış
+          // olabilir): hemen pes etmeden birkaç kez daha bak.
+          plStaleHits += 1;
+          if (plStaleHits < 4) {
+            setMsg("Sunucudan yanıt gecikti, izlemeye devam ediliyor…", "info");
+          } else {
+            finishJob(st);
+            return;
+          }
+        } else {
+          plStaleHits = 0;
+          if (["done", "partial", "cancelled", "failed"].indexOf(st.state) !== -1) {
+            finishJob(st);
+            return;
+          }
+        }
+      } catch (e) {
+        /* geçici ağ hatası / zaman aşımı: zinciri sürdür */
+      }
+      // setInterval DEĞİL: yavaş yanıtta istek yığmasın.
+      plTimer = setTimeout(pollOnce, document.hidden ? 5000 : 2000);
+    }
+
+    function applyStatus(st) {
+      plLastStatus = st;
+      const settled = (st.items || []).filter((i) => i.state !== "queued" && i.state !== "downloading").length;
+      const pct = st.total ? Math.round(100 * settled / st.total) : 0;
+      $("pl-progress").classList.add("show");
+      $("pl-bar").style.width = pct + "%";
+
+      let cur = "";
+      if (st.current) {
+        const stage = st.current.stage === "merge" ? "birleştiriliyor… "
+          : st.current.stage === "convert" ? "dönüştürülüyor… " : "";
+        cur = " · şu an: " + stage + (st.current.title || "");
+      }
+      let text = st.done + " / " + st.total + " tamamlandı"
+        + (st.failed ? " · " + st.failed + " başarısız" : "") + cur;
+      // Kalemler arası bekleme açıklanmazsa kullanıcı "takıldı" sanıp iptal eder.
+      if (st.kind === "links" && st.state === "running" && !st.current) {
+        text += " · sıradakine geçiliyor (Instagram'ı yormamak için kısa bekleme)";
+      }
+      const el = $("pl-progress-text");
+      if (el.textContent !== text) el.textContent = text;  // aria-live boş yere konuşmasın
+
+      patchRows(st);
+    }
+
+    // Satırları YENİDEN ÇİZMEZ, yalnız değişen alanı yazar (scroll/odak korunur).
+    function patchRows(st) {
+      (st.items || []).forEach((it) => {
+        const row = $("pl-list").querySelector('.pl-row[data-idx="' + it.index + '"]');
+        if (!row) return;
+        const cell = row.querySelector(".pl-st");
+        const bar = row.querySelector(".pl-rowbar");
+        let text = "bekliyor", cls = "pl-st", width = "0";
+        // Karşılaştırmayı innerHTML ile YAPMIYORUZ: tarayıcı geri okurken
+        // '&' → '&amp;' ve download → download="" yaptığı için hazır satırların
+        // <a> düğümü her sorguda yeniden yaratılıyor, tıklama düşüyordu.
+        let key = it.state;
+
+        if (it.state === "ready") {
+          width = "100%";
+        } else if (it.state === "failed") {
+          text = "hata"; cls = "pl-st err"; cell.title = it.err || "";
+        } else if (it.state === "skipped") {
+          text = "atlandı"; cell.title = it.err || "";
+        } else if (st.current && st.current.index === it.index) {
+          text = st.current.stage === "download" ? (st.current.pct + "%")
+            : st.current.stage === "merge" ? "birleştiriliyor…" : "dönüştürülüyor…";
+          width = (st.current.pct || 0) + "%";
+          key = "cur:" + text;
+        }
+
+        if (cell.dataset.key !== key) {
+          cell.dataset.key = key;
+          if (it.state === "ready") {
+            const a = document.createElement("a");
+            a.href = "/api/playlist/file?job=" + encodeURIComponent(st.job) + "&i=" + it.index;
+            a.setAttribute("download", "");
+            a.title = "İndir";
+            a.textContent = "⬇";
+            cell.textContent = "";
+            cell.appendChild(a);
+          } else {
+            cell.textContent = text;
+          }
+        }
+        if (cell.className !== cls) cell.className = cls;
+        bar.style.width = width;
+      });
+    }
+
+    // Başarısız satırları listenin en üstüne topla (kaydırmayan kullanıcı görsün).
+    function hoistFailed(st) {
+      const list = $("pl-list");
+      (st.items || []).filter((i) => i.state === "failed").reverse().forEach((i) => {
+        const row = list.querySelector('.pl-row[data-idx="' + i.index + '"]');
+        if (row) list.insertBefore(row, list.firstChild);
+      });
+    }
+
+    function finishJob(st) {
+      clearTimeout(plTimer); plTimer = null;
+      plStaleHits = 0;
+      plLastJob = st.job; plJob = null;
+      lockUI(false);
+      applyStatus(st);
+      try { localStorage.removeItem("igd_job"); } catch (e) {}
+
+      const bad = (st.items || []).filter((i) => i.state === "failed").length;
+      let text;
+      if (st.state === "done") text = "Tamamlandı ✓ " + st.done + " dosya hazır — aşağıdan indirin.";
+      else if (st.state === "partial") text = st.done + " tamam · " + bad + " başarısız — hazır dosyaları indirebilirsiniz.";
+      else if (st.state === "cancelled") text = "İptal edildi — inen dosyalar aşağıda.";
+      else if (st.state === "stale") text = "Sunucu yeniden başlamış görünüyor — " + st.done + " dosya hazır. Kalanlar için tekrar başlatın.";
+      else text = st.note || "İndirme başarısız oldu.";
+      if (st.note && st.state !== "failed") text += " (" + st.note + ")";
+      setMsg(text, (st.state === "failed" ? "error" : "info"));
+
+      $("pl-results").classList.add("show");
+      $("pl-retry").classList.toggle("hide", bad === 0);
+      $("pl-retry").textContent = "Başarısızları tekrar dene (" + bad + ")";
+      // İkinci turun tek düğmelik yolu (cookies.txt tazeleyip yeniden yapıştır).
+      $("pl-copylinks").classList.toggle("hide", st.kind !== "links");
+      hoistFailed(st);
+      libMarkFinish(st);
+    }
+
+    function jobGone() {
+      clearTimeout(plTimer); plTimer = null;
+      plStaleHits = 0;
+      plJob = null;
+      lockUI(false);
+      try { localStorage.removeItem("igd_job"); } catch (e) {}
+      setMsg("Bu iş artık yok (süresi dolmuş veya sunucu yeniden başlamış olabilir).", "error");
+    }
+
+    $("pl-start").addEventListener("click", () => {
+      if (isBatch()) startLinksJob(); else startJob();
+    });
+
+    $("to-multi").addEventListener("click", showMultiInput);
+    $("multi-parse").addEventListener("click", parseLinks);
+    $("to-single").addEventListener("click", () => {
+      if (plJob) return;
+      showSingleInput();
+      // Biten bir işin HAZIR dosyaları duruyorsa listeyi yıkmayız: ⬇ bağlantıları
+      // ve "Sunucudan sil" düğmesi tek yoldur (finishJob localStorage kaydını
+      // sildiği için sayfa yenilense de geri gelmezdi). Giriş kutusu yine de tek
+      // bağlantı moduna geçer; yeni bağlantı çözülünce liste zaten yenilenir.
+      const ready = plLastStatus &&
+        (plLastStatus.items || []).some((i) => i.state === "ready");
+      if (ready) {
+        setMsg("Hazır dosyalar aşağıda duruyor — indirdikten sonra “Sunucudan sil” " +
+          "diyebilir ya da yeni bağlantı çözebilirsiniz.", "info");
+        return;
+      }
+      if (isBatch()) {
+        plData = null; plSel.clear(); plAnchor = null;
+        $("pl-list").innerHTML = "";
+        $("batch-summary").classList.add("hide");
+        $("batch-bad").classList.add("hide");
+        $("pl").classList.remove("show");
+        panel.classList.remove("show");
+        setMsg("", "");
+      }
+    });
+
+    // Keşfedilebilirlik: input[type=text] satır sonlarını boşluğa çevirdiği
+    // için, çok satırlı yapıştırmayı yakalamazsak kullanıcı "bozuldu" sanır.
+    urlInput.addEventListener("paste", (ev) => {
+      let text = "";
+      try {
+        text = ((ev.clipboardData || window.clipboardData).getData("text") || "");
+      } catch (e) { return; }
+      if (text.indexOf("\n") === -1) return;
+      // "http" saymak yetmiyordu: sunucu şemasız bağlantıyı da kabul ediyor
+      // (instagram.com/p/XXX → https://…), o metinde hiç "http" geçmez ve
+      // yakalayıcı devreye girmeyince tek satırlık kutu satır sonlarını
+      // boşluğa çevirip "Geçerli bir bağlantı girin" hatası veriyordu.
+      if ((text.match(/(youtube\.com|youtu\.be|instagram\.com)/gi) || []).length < 2) return;
+      ev.preventDefault();
+      $("multi-in").value = text;
+      showMultiInput();
+      parseLinks();
+    });
+
+    $("pl-cancel").addEventListener("click", async () => {
+      if (!plJob) return;
+      const btn = $("pl-cancel");
+      btn.disabled = true;
+      try {
+        await fetch("/api/playlist/cancel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ job: plJob }),
+        });
+        setMsg("İptal ediliyor… (inen dosyalar korunur)", "info");
+      } catch (e) {
+        setMsg("Sunucuya ulaşılamadı.", "error");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // Biten dosyaları 800 ms aralıkla sırayla tıkla (blob YOK, bellek maliyeti sıfır).
+    $("pl-seq").addEventListener("click", () => {
+      const links = Array.prototype.slice.call($("pl-list").querySelectorAll(".pl-st a"));
+      if (!links.length) { setMsg("Hazır dosya yok.", "error"); return; }
+      links.forEach((a, i) => setTimeout(() => a.click(), i * 800));
+      setMsg(links.length + " dosya sırayla indiriliyor… Tarayıcı izin isterse “İzin Ver” deyin.", "info");
+    });
+
+    // Biten işin TÜRÜ ile ekranda duran görünümün türü uyuşmuyorsa sonuç
+    // düğmeleri hiç iş görmemeli: aksi hâlde bayat bir çoklu-bağlantı işi,
+    // ekrandaki taze oynatma listesini ezip başka içerik indirmeye başlıyordu.
+    function staleResults() {
+      return !!plLastStatus && (plLastStatus.kind === "links") !== isBatch();
+    }
+
+    $("pl-retry").addEventListener("click", () => {
+      if (!plLastStatus || plJob || staleResults()) return;
+      // Dallanma ŞART: batch işinde st.url boştur, startJob() 400 alırdı.
+      if (plLastStatus.kind === "links" || isBatch()) {
+        // "skipped" olanlar tekrar DENENMEZ: aynı sonucu verir ve Instagram
+        // tarafında boşuna istek harcar.
+        const failed = (plLastStatus.items || []).filter((i) => i.state === "failed");
+        if (!failed.length) return;
+        plData = plData || {};
+        plData.kind = "links";
+        plData.title = "Yapıştırılan bağlantılar";
+        plData.resolutions = plData.resolutions || [2160, 1440, 1080, 720, 480, 360, 240, 144];
+        plData.max_select = plData.max_select || { video: 25, audio: 50 };
+        plData.max_ig = plData.max_ig || 20;
+        plData.rejected = [];
+        plData.entries = failed.map((i, n) => ({
+          index: n + 1, id: i.id, platform: i.platform || "youtube",
+          url: i.url || "", title: i.title || "", duration: null,
+          uploader: "", unavailable: false,
+        }));
+        plData.summary = {
+          yt: plData.entries.filter((e) => e.platform === "youtube").length,
+          ig: plData.entries.filter((e) => e.platform === "instagram").length,
+          dup: 0, bad: 0,
+        };
+        plSel.clear();
+        plData.entries.forEach((e) => plSel.add(e.index));
+        renderRows(); showBatchView(); syncChecks(); updateSelUI();
+        startLinksJob();
+        return;
+      }
+      plSel.clear();
+      plLastStatus.items.filter((i) => i.state === "failed").forEach((i) => plSel.add(i.index));
+      syncChecks(); updateSelUI();
+      startJob();
+    });
+
+    $("pl-copylinks").addEventListener("click", async () => {
+      if (!plLastStatus || staleResults()) return;
+      const urls = (plLastStatus.items || [])
+        .filter((i) => i.state !== "ready")
+        .map((i) => i.url)
+        .filter(Boolean);
+      if (!urls.length) { setMsg("Hazır olmayan bağlantı yok.", "info"); return; }
+      const text = urls.join("\n");
+      try {
+        await navigator.clipboard.writeText(text);
+        setMsg(urls.length + " bağlantı panoya kopyalandı — ikinci turda yapıştırabilirsiniz.", "info");
+      } catch (e) {
+        // Pano izni yoksa kutuya yaz: kullanıcı yine de elle kopyalayabilsin.
+        $("multi-in").value = text;
+        showMultiInput();
+        setMsg("Pano kullanılamadı; bağlantılar kutuya yazıldı.", "info");
+      }
+    });
+
+    $("pl-clear").addEventListener("click", async () => {
+      const job = plJob || plLastJob;
+      if (!job) return;
+      try {
+        await fetch("/api/playlist/discard", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ job }),
+        });
+      } catch (e) {}
+      clearTimeout(plTimer); plTimer = null;
+      plJob = null; plLastJob = null; plLastStatus = null;
+      lockUI(false);
+      $("pl-results").classList.remove("show");
+      $("pl-progress").classList.remove("show");
+      if (plData) renderRows();
+      syncChecks();
+      setMsg("Sunucudaki geçici dosyalar silindi.", "info");
+    });
+
+    $("pill-single").addEventListener("click", () => { if (!plJob) showSingleView(); });
+    $("pill-list").addEventListener("click", () => {
+      if (plJob) return;
+      if (plData) { showListView(); updateSelUI(); } else loadPlaylist();
+    });
+
+    // Kalite/format değişince tahmin ve limit yeniden hesaplansın.
+    document.querySelectorAll(".tab").forEach((t) => {
+      t.addEventListener("click", () => {
+        if (!plData || plJob) return;
+        updateSelUI();
+        // Video → Müzik geçişinde sınır 25'ten 50'ye çıkar: kalanlar da seçilebilir.
+        const lim = selLimit();
+        if (isBatch() && plSel.size < Math.min(lim, plData.entries.length)) {
+          // Ek ("-e"/"-ye") sayının okunuşuna göre değişir; kalıbı ek
+          // gerektirmeyecek biçimde kuruyoruz ("50'e" yanlıştı).
+          setMsg("Sınır " + lim + " oldu — kalanları seçmek için aralık kutusunu " +
+            "kullanın (örn. " + (plSel.size + 1) + "-" + Math.min(lim, plData.entries.length) + ").", "info");
+        }
+      });
+    });
+    ["vquality", "aformat", "abitrate"].forEach((id) => {
+      $(id).addEventListener("change", () => { if (plData && !plJob) updateSelUI(); });
+    });
+
+    // Sayfa yenilenirse / sekme kapanıp açılırsa devam eden işe geri bağlan.
+    function rowsFromStatus(st) {
+      // Çoklu bağlantı işi: st.url BOŞTUR, urlInput'a hiçbir şey yazılmaz.
+      if (st.kind === "links") {
+        const items = st.items || [];
+        plData = {
+          kind: "links",
+          title: "Devam eden indirme",
+          uploader: "",
+          count: st.total,
+          url: "",
+          resolutions: [2160, 1440, 1080, 720, 480, 360, 240, 144],
+          max_select: { video: 25, audio: 50 },
+          max_ig: 20,
+          rejected: [],
+          summary: {
+            yt: items.filter((i) => (i.platform || "youtube") === "youtube").length,
+            ig: items.filter((i) => i.platform === "instagram").length,
+            dup: 0, bad: 0,
+          },
+          entries: items.map((i) => ({
+            index: i.index, id: i.id, platform: i.platform || "youtube",
+            url: i.url || "", title: i.title, duration: null,
+            uploader: "", unavailable: false,
+          })),
+        };
+        plSel.clear();
+        plData.entries.forEach((e) => plSel.add(e.index));
+        $("pl-title").textContent = "Devam eden indirme";
+        $("pl-owner").textContent = "";
+        $("pl-badge").textContent = "Çoklu bağlantı · " + st.total + " öğe";
+        renderRows();
+        return;
+      }
+
+      plData = {
+        title: "Oynatma Listesi",
+        uploader: "",
+        count: st.total,
+        url: st.url || "",
+        resolutions: [2160, 1440, 1080, 720, 480, 360, 240, 144],
+        max_select: { video: 25, audio: 50 },
+        entries: (st.items || []).map((i) => ({
+          index: i.index, id: i.id, title: i.title,
+          duration: i.duration || null, uploader: "", unavailable: false,
+        })),
+      };
+      // Liste bağlantısını geri koy: yoksa 'Seçilenleri indir' ve 'Başarısızları
+      // tekrar dene' boş url ile 400 alıyordu.
+      if (st.url && !urlInput.value.trim()) urlInput.value = st.url;
+      plSel.clear();
+      plData.entries.forEach((e) => plSel.add(e.index));
+      $("pl-title").textContent = "Devam eden indirme";
+      $("pl-owner").textContent = "";
+      $("pl-badge").textContent = "Oynatma Listesi · " + st.total + " video";
+      renderRows();
+    }
+
+    /* =====================================================================
+       KİTAPLIK
+       Bu blok SAF EKLEMEDİR. Yukarıdaki hiçbir fonksiyon değişmez; kitaplık
+       kendi indirme motorunu KURMAZ — seçimi mevcut çoklu-bağlantı görünümüne
+       aktarır ve kullanıcı bugünkü "Seçilenleri indir" düğmesine basar.
+       ===================================================================== */
+    let topView = "download";
+    // Seçim anahtarı İNDEKS DEĞİL (plat + ":" + kod). Sebep: /api/links/start
+    // "rejected || duplicates || len farkı" görürse işi HİÇ BAŞLATMAZ. Aynı
+    // reel iki koleksiyonda görünse bile bu anahtar yinelenen URL üretemez.
+    const libSel = new Map();
+    let libQ = { q: "", plat: "all", cat: "", dl: "all", col: "", sort: "yeni", offset: 0 };
+    let libTotal = 0, libShown = 0, libLoading = false, libDone = false;
+    let libAiTimer = null, libAiCtl = null, libSearchTimer = null, libObserver = null;
+    let libCoverTimer = null, libCoverCtl = null;
+    // #lib-cover düğmesinin O ANKİ kapsamı: 'eksik' (hiç denenmemiş) ya da
+    // 'basarisiz' (üç denemeyi tüketmiş). libLoadState her yenilemede yazar.
+    let libCoverKapsam = "eksik";
+    // İSTEK NESLİ: her libRefresh() bir öncekini geçersizler. Olmadan, uçuştaki
+    // eski filtrenin yanıtı temizlenmiş ızgaraya kart döküyor ve yeni sorgunun
+    // offset/gösterilen sayaçlarını kirletiyordu.
+    let libGen = 0, libCtl = null;
+    let libState = null, libAnchorKey = null;
+    let KATEGORI_AD = {};
+    const LIB_PAGE = 60, LIB_DOM_CAP = 600, LIB_CHUNK = 200;
+
+    function libMsg(text, type) {
+      const el = $("lib-msg");
+      el.className = "msg " + (type || "");
+      el.textContent = text;          // düz metin: innerHTML ASLA
+    }
+
+    // kalici=false: sekme GEÇİCİ olarak değişir ama kullanıcının kayıtlı
+    // tercihi korunur (restoreJob'ın süren işi göstermesi tercihi silmemeli).
+    function showView(name, kalici) {
+      topView = name === "library" ? "library" : "download";
+      $("view-download").classList.toggle("hide", topView !== "download");
+      $("view-library").classList.toggle("hide", topView !== "library");
+      $("vt-download").classList.toggle("active", topView === "download");
+      $("vt-library").classList.toggle("active", topView === "library");
+      document.querySelector(".wrap").classList.toggle("wide", topView === "library");
+      if (kalici !== false) { try { localStorage.setItem("igd_view", topView); } catch (e) {} }
+      if (topView === "library" && !libState) { libLoadState(); libRefresh(); }
+    }
+
+    /* ---- seçim kalıcılığı ---- */
+    function libSaveSel() {
+      try {
+        localStorage.setItem("igd_lib_sel", JSON.stringify([...libSel.values()].slice(0, 400)));
+      } catch (e) {}
+    }
+    function libLoadSel() {
+      try {
+        const raw = JSON.parse(localStorage.getItem("igd_lib_sel") || "[]");
+        if (Array.isArray(raw)) raw.forEach((s) => {
+          if (s && s.kod && s.plat && s.url) libSel.set(s.plat + ":" + s.kod, s);
+        });
+      } catch (e) {}
+    }
+
+    function libUpdateSelbar() {
+      const n = libSel.size;
+      $("lib-selbar").classList.toggle("hide", n === 0);
+      $("lib-selcount").textContent = n + " seçili";
+      const ig = [...libSel.values()].filter((s) => s.plat === "instagram").length;
+      // KOTA MODA BAĞLI: sunucu ses modunda 50 kaleme izin veriyor (video 25).
+      // Sabit 25 yazmak müzik turunu gereksiz yere ikiye bölüyordu.
+      const lim = selLimit(), igLim = igLimit();
+      const q = $("lib-quota");
+      q.textContent = ig + " / " + igLim + " Instagram · " + n + " / " + lim + " " +
+        (currentMode === "audio" ? "müzik" : "video");
+      q.classList.toggle("sel-bad", ig > igLim || n > lim);
+      $("lib-download").textContent = "⬇ İndirmeye aktar (" + Math.min(n, lim) + ")";
+      document.querySelectorAll(".lib-card").forEach((el) => {
+        el.classList.toggle("sel", libSel.has(el.dataset.plat + ":" + el.dataset.kod));
+      });
+      // KOŞULSUZ YAZILIR: `if (n)` kapısı seçim sıfırlandığında ekranda
+      // "· N seçili" ibaresini takılı bırakıyordu.
+      $("lib-count").textContent =
+        libTotal + " kayıt · " + libShown + " gösteriliyor" + (n ? " · " + n + " seçili" : "");
+    }
+
+    /* ---- durum / kategori çipleri ---- */
+    async function libLoadState() {
+      try {
+        const res = await fetch("/api/library/state", { cache: "no-store" });
+        const d = await res.json();
+        if (!d || !d.ok) return;
+        libState = d;
+        KATEGORI_AD = {};
+        (d.kategoriler || []).forEach((k) => { KATEGORI_AD[k.kod] = k.ad; });
+
+        // Kategori çipleri
+        const box = $("lib-cats");
+        box.textContent = "";
+        const chip = (kod, ad, adet) => {
+          const el = document.createElement("div");
+          el.className = "lib-chip" + (libQ.cat === kod ? " active" : "");
+          el.dataset.cat = kod;
+          el.textContent = ad + (adet ? " (" + adet + ")" : "");
+          box.appendChild(el);
+        };
+        chip("", "Tümü", d.toplam || 0);
+        // 20+ kategoride çip satırı taşar: ADETE GÖRE AZALAN sırala, 'diger' ve
+        // 'belirsiz'i (ve "kategorisiz"i) sona sabitle. Yalnız adet>0 gösterilir.
+        const sonaGiden = { diger: 1, belirsiz: 2, _yok: 3 };
+        (d.kategoriler || [])
+          .filter((k) => k.adet)
+          .slice()
+          .sort((a, b) => (sonaGiden[a.kod] || 0) - (sonaGiden[b.kod] || 0) || b.adet - a.adet)
+          .forEach((k) => chip(k.kod, k.ad, k.adet));
+
+        // Elle kategori atama menüsü
+        const sel = $("lib-setcat-val");
+        sel.textContent = "";
+        (d.kategoriler || []).forEach((k) => {
+          // atanabilir=false olan kodlar (_yok ve "bilinmeyen: X") menüye
+          // GİRMEZ: /api/library/category beyaz listesinde olmadıkları için
+          // seçilip "Kategori ata"ya basılınca 400 "Bilinmeyen kategori."
+          // dönüyordu.
+          if (k.kod === "_yok" || k.atanabilir === false) return;
+          const o = document.createElement("option");
+          o.value = k.kod; o.textContent = k.ad;
+          sel.appendChild(o);
+        });
+
+        // AI kapalıysa (ANTHROPIC_API_KEY yok) düğme gizlenir — hata YOK.
+        $("lib-ai").classList.toggle("hide", !d.ai_acik);
+        $("lib-ai-off").classList.toggle("hide", !!d.ai_acik);
+        if (d.ai_acik && d.ai_bekleyen)
+          $("lib-ai").textContent = "🤖 Kategorilendir (" + d.ai_bekleyen + ")";
+        else $("lib-ai").textContent = "🤖 Kategorilendir";
+
+        // Kategorilendirilemeyen kalemler GÖRÜNÜR olmalı: aksi hâlde
+        // "ai_bekleyen = 0" yüzünden düğme sayısız kalıyor, basınca
+        // "Kategorilendirilecek kayıt yok" deniyor ve kartlar kategorisiz duruyordu.
+        const yeniden = $("lib-ai-retry");
+        yeniden.classList.toggle("hide", !(d.ai_acik && d.ai_basarisiz));
+        if (d.ai_basarisiz) {
+          yeniden.textContent = "🔁 Tekrar dene (" + d.ai_basarisiz + ")";
+          yeniden.title = d.ai_basarisiz + " kayıt kategorilendirilemedi.";
+        }
+
+        // 'diger' + 'belirsiz' yeniden sınıflandırma düğmesi. YIKICI DEĞİL:
+        // mevcut kategori, üzerine yenisi başarıyla yazılana kadar yerinde durur.
+        const tekrar = $("lib-ai-again");
+        tekrar.classList.toggle("hide", !(d.ai_acik && d.ai_yeniden));
+        if (d.ai_yeniden) {
+          tekrar.textContent = "🔁 Diğer/Belirsiz'i yeniden sınıflandır (" + d.ai_yeniden + ")";
+          tekrar.title = "Yaklaşık " + (d.ai_yeniden * 0.00097).toFixed(2) + " USD. " +
+            "ÖNCE “Ölç”e basıp yeni kategori eklemeden çalıştırmak parayı boşa " +
+            "harcar: kayıtlar yine kutu bulamaz.";
+        }
+
+        // KAPAK ŞERİDİ — eski metin YANLIŞTI. ÖLÇÜM: adresler CANLI (sunucudan
+        // HTTP 200 + image/jpeg); sorun süre dolması değil, Instagram CDN'inin
+        // başka origin'den gelen görsel isteğini engellemesi (hotlink koruması).
+        // Çare yeniden içe aktarmak değil, kapağı sunucuya indirmektir.
+        const kapak = d.kapak || {};
+        const dugme = $("lib-cover");
+        // ÇIKMAZDAN ÇIKIŞ (#lib-ai-retry deseni). Düğme yalnız `eksik`e bağlı
+        // olsaydı: üç denemeyi tüketen satırlar `eksik`ten çıkıp `hatali`ya
+        // geçince düğme GİZLENİYOR, ama uyarı şeridi hâlâ "Kapakları indir'e
+        // basın" diyordu — ekranda öyle bir düğme kalmıyordu.
+        libCoverKapsam = kapak.eksik ? "eksik" : (kapak.hatali ? "basarisiz" : "eksik");
+        dugme.classList.toggle("hide", !(kapak.eksik || kapak.hatali));
+        if (kapak.eksik) {
+          dugme.textContent = "🖼 Kapakları indir (" + kapak.eksik + ")";
+          dugme.title = "Sunucuya indirilir, kendi adresimizden sunulur. " +
+            "Maliyet 0 USD, yaklaşık " + Math.max(1, Math.round(kapak.eksik / 120)) +
+            " dakika.";
+        } else if (kapak.hatali) {
+          dugme.textContent = "🔁 Kapakları tekrar dene (" + kapak.hatali + ")";
+          dugme.title = kapak.hatali + " kapak üç denemede indirilemedi. " +
+            "Sayaçları sıfırlayıp yeniden dener. Maliyet 0 USD.";
+        }
+        const bar = $("lib-stale-bar");
+        if (kapak.eksik) {
+          bar.textContent = kapak.eksik + " kapak henüz sunucuya indirilmedi. " +
+            "Instagram kapakları tarayıcıdan doğrudan çekilemiyor (hotlink " +
+            "koruması); sunucu bir kez indirip kendi adresinden sunar. " +
+            "“Kapakları indir”e basın — ücretsizdir.";
+          bar.classList.remove("hide");
+        } else if (kapak.hatali) {
+          bar.textContent = kapak.hatali + " kapak indirilemedi. Tekrar denemek " +
+            "için “Kapakları tekrar dene”ye basın — ücretsizdir.";
+          bar.classList.remove("hide");
+        } else bar.classList.add("hide");
+
+        if (d.ai && d.ai.calisiyor && !libAiTimer) { $("lib-ai-bar").classList.add("show"); libAiPoll(); }
+        // Sayfa kapatılıp dönülse bile tur sürüyorsa şerit yeniden bağlanır
+        // (kullanıcı düğmeye tekrar basıp 409 yemesin).
+        if (kapak.calisiyor && !libCoverTimer) {
+          $("lib-cover-bar").classList.add("show"); libCoverPoll();
+        }
+      } catch (e) { /* sunucu kapalıysa sessiz geç */ }
+    }
+
+    /* ---- ızgara ---- */
+    function libIgTile(kod, plat) {
+      const el = document.createElement("span");
+      el.className = "lib-cov tile " + (plat === "youtube" ? "yt" : "ig");
+      el.textContent = plat === "youtube" ? "YouTube" : (kod || "IG");
+      return el;
+    }
+
+    function libCard(k) {
+      const el = document.createElement("article");
+      el.className = "lib-card";
+      el.dataset.id = k.id; el.dataset.kod = k.kod; el.dataset.plat = k.plat;
+      el.dataset.url = k.url;
+      if (libSel.has(k.plat + ":" + k.kod)) el.classList.add("sel");
+
+      // YouTube kapağı deterministik ve SÜRESİ DOLMAZ.
+      // Instagram kapağı ARTIK yalnız KENDİ ucumuzdan gelir: ham CDN adresi
+      // tarayıcıdan çekilemiyordu (hotlink koruması). Test GEVŞETİLMEDİ,
+      // SIKILAŞTIRILDI — dış adres karta ilkesel olarak basılamaz.
+      const kapak = k.plat === "youtube"
+        ? "https://i.ytimg.com/vi/" + encodeURIComponent(k.kod) + "/mqdefault.jpg"
+        : ((k.kapak && /^\/api\/library\/cover\/[0-9a-f]{32}\.(?:jpg|webp|png)$/.test(k.kapak))
+            ? k.kapak : "");
+      if (kapak) {
+        const img = document.createElement("img");
+        img.className = "lib-cov"; img.loading = "lazy"; img.decoding = "async";
+        img.alt = "";
+        img.referrerPolicy = "no-referrer";
+        img.onerror = () => { try { img.replaceWith(libIgTile(k.kod, k.plat)); } catch (e) {} };
+        img.src = kapak;                       // DOĞRUDAN ATAMA (innerHTML ASLA)
+        el.appendChild(img);
+      } else el.appendChild(libIgTile(k.kod, k.plat));
+
+      const a = document.createElement("a");
+      a.className = "lib-open"; a.href = k.url; a.target = "_blank";
+      a.rel = "noopener noreferrer"; a.textContent = "↗";
+      el.appendChild(a);
+
+      const d = document.createElement("div");
+      d.className = "lib-desc";
+      d.textContent = k.aciklama || k.baslik || k.kod;   // textContent: XSS disiplini
+      el.appendChild(d);
+
+      const foot = document.createElement("div");
+      foot.className = "lib-foot";
+      const cat = document.createElement("span");
+      cat.className = "lib-cat"; cat.dataset.cat = k.kategori || "_yok";
+      // Ham kod yedeği: listede olmayan bir kategori "kategorisiz" YALANIYLA
+      // gösterilmesin (o satır 'Kategorisiz' çipinde de sayılmıyor).
+      cat.textContent = KATEGORI_AD[k.kategori] || k.kategori || "kategorisiz";
+      foot.appendChild(cat);
+      if (k.dl === "ready" || k.dl === "failed") {
+        const s = document.createElement("span");
+        s.className = "lib-dl" + (k.dl === "failed" ? " bad" : "");
+        // "indirildi" = GEÇMİŞTE bir kez indi; dosya sunucuda DURMUYOR olabilir.
+        s.textContent = k.dl === "ready" ? "✓ indirildi" : "✕ hata";
+        s.title = k.dl === "ready"
+          ? "Geçmişte indirildi — dosya sunucudan 30 dakika sonra silinir."
+          : (k.hata || "İndirme başarısız oldu.");
+        foot.appendChild(s);
+      }
+      el.appendChild(foot);
+      return el;
+    }
+
+    function libRefresh() {
+      libQ.offset = 0; libShown = 0; libDone = false;
+      // Uçuştaki isteği İPTAL ET ve neslini geçersizle: aksi hâlde libLoading
+      // true olduğu için libLoadMore hemen dönüyor, hiç istek atılmıyor ve
+      // eski yanıt yeni filtrenin ızgarasına düşüyordu.
+      libGen++;
+      try { if (libCtl) libCtl.abort(); } catch (e) {}
+      libCtl = null;
+      libLoading = false;
+      $("lib-grid").textContent = "";
+      $("lib-empty").classList.add("hide");
+      libLoadMore();
+    }
+
+    async function libLoadMore() {
+      if (libLoading || libDone) return;
+      libLoading = true;
+      const nesil = libGen;
+      const ctl = ("AbortController" in window) ? new AbortController() : null;
+      libCtl = ctl;
+      const p = new URLSearchParams({
+        q: libQ.q, plat: libQ.plat, cat: libQ.cat, dl: libQ.dl,
+        sort: libQ.sort, offset: String(libQ.offset), limit: String(LIB_PAGE),
+      });
+      if (libQ.col) p.set("col", libQ.col);
+      try {
+        const res = await fetch("/api/library/items?" + p.toString(),
+          ctl ? { cache: "no-store", signal: ctl.signal } : { cache: "no-store" });
+        const d = await res.json();
+        if (nesil !== libGen) return;      // ESKİ NESİL: yanıt SESSİZCE atılır
+        if (!res.ok || !d.ok) { libMsg(d.error || "Kitaplık okunamadı.", "error"); return; }
+        libTotal = d.toplam;
+        const gelen = (d.kayitlar || []).length;
+        const grid = $("lib-grid");
+        const frag = document.createDocumentFragment();
+        (d.kayitlar || []).forEach((k) => frag.appendChild(libCard(k)));
+        grid.appendChild(frag);
+        libQ.offset += gelen;
+        libShown += gelen;
+        if (gelen < LIB_PAGE) libDone = true;
+
+        // DOM TAVANI: 600 karttan sonra sonsuz kaydırma durur.
+        const doldu = libShown >= LIB_DOM_CAP;
+        // "Sonraki 600" tam katlarda (offset === toplam) BOŞ sayfa getiriyor
+        // ve ızgara açıklamasız kalıyordu; geri dönüş yolu bırakılır.
+        const bosSayfa = libShown === 0 && libQ.offset > 0;
+        const more = $("lib-more");
+        more.classList.toggle("hide", libDone && !doldu && !bosSayfa);
+        more.textContent = bosSayfa
+          ? "↺ Başa dön"
+          : (doldu ? "Sonraki " + LIB_DOM_CAP : "Daha fazla göster");
+
+        const bos = $("lib-empty");
+        if (libTotal === 0) {
+          bos.textContent = (libQ.q || libQ.cat || libQ.dl !== "all" || libQ.plat !== "all")
+            ? "Bu filtreye uyan kayıt yok."
+            : "Kitaplık boş — Instagram kayıtlarınızı içe aktarın.";
+          bos.classList.remove("hide");
+          if (!libQ.q && !libQ.cat) $("lib-import").open = true;
+        } else if (bosSayfa) {
+          bos.textContent = "Bu sayfada kayıt yok — “Başa dön”e basın.";
+          bos.classList.remove("hide");
+        } else {
+          bos.classList.add("hide");
+        }
+        libUpdateSelbar();
+      } catch (e) {
+        if (nesil !== libGen) return;      // iptal edilen istek hata değildir
+        libMsg("Kitaplık okunamadı.", "error");
+      } finally {
+        if (nesil === libGen) { libLoading = false; libCtl = null; }
+      }
+    }
+
+    /* ---- seçim (tek delege dinleyici; 600 karta ayrı dinleyici YOK) ---- */
+    $("lib-grid").addEventListener("click", (ev) => {
+      const cat = ev.target.closest(".lib-cat");
+      if (cat) { libQ.cat = cat.dataset.cat === "_yok" ? "_yok" : cat.dataset.cat; libRefresh(); libLoadState(); return; }
+      if (ev.target.closest("a")) return;      // ↗ yeni sekmede açar
+      const card = ev.target.closest(".lib-card");
+      if (!card) return;
+      const key = card.dataset.plat + ":" + card.dataset.kod;
+      const kayit = {
+        id: Number(card.dataset.id), kod: card.dataset.kod, plat: card.dataset.plat,
+        url: card.dataset.url, baslik: (card.querySelector(".lib-desc") || {}).textContent || "",
+      };
+      const ac = !libSel.has(key);
+      if (ev.shiftKey && libAnchorKey) {
+        const hepsi = [...document.querySelectorAll(".lib-card")];
+        const a = hepsi.findIndex((x) => x.dataset.plat + ":" + x.dataset.kod === libAnchorKey);
+        const b = hepsi.indexOf(card);
+        if (a >= 0 && b >= 0) {
+          for (let i = Math.min(a, b); i <= Math.max(a, b); i++) {
+            const el = hepsi[i], k2 = el.dataset.plat + ":" + el.dataset.kod;
+            if (ac) libSel.set(k2, {
+              id: Number(el.dataset.id), kod: el.dataset.kod, plat: el.dataset.plat,
+              url: el.dataset.url, baslik: (el.querySelector(".lib-desc") || {}).textContent || "",
+            });
+            else libSel.delete(k2);
+          }
+        }
+      } else {
+        if (ac) libSel.set(key, kayit); else libSel.delete(key);
+        libAnchorKey = key;
+      }
+      libSaveSel(); libUpdateSelbar();
+    });
+
+    /* ---- indirmeye aktarım: YENİ MOTOR YOK, OTOMATİK BAŞLATMA YOK ---- */
+    function libToDownload() {
+      if (plJob) { libMsg("Bir indirme sürüyor; bitmesini bekleyin veya İptal edin.", "error"); return; }
+      const hepsi = [...libSel.values()];
+      if (!hepsi.length) { libMsg("Hiç kayıt seçilmedi.", "error"); return; }
+
+      // KOTA = PARTİ BÖLÜCÜ. Sunucudaki sınırlar AYNEN korunur; arayüz onları
+      // bir iş akışına çevirir. 951 kaydı tek işte indirmek YAPISAL OLARAK
+      // imkânsızdır. Sınırlar MODA BAĞLI okunur (ses modunda 50).
+      const lim = selLimit(), igLim = igLimit();
+      const parti = []; let ig = 0;
+      for (const s of hepsi) {
+        if (parti.length >= lim) break;
+        if (s.plat === "instagram") { if (ig >= igLim) continue; ig++; }
+        parti.push(s);
+      }
+
+      plData = {
+        kind: "links",
+        title: "Kitaplıktan seçilenler",
+        uploader: "",
+        count: parti.length,
+        url: "",
+        resolutions: [2160, 1440, 1080, 720, 480, 360, 240, 144],
+        max_select: { video: 25, audio: 50 },
+        max_ig: 20,
+        rejected: [],
+        summary: {
+          yt: parti.filter((s) => s.plat === "youtube").length,
+          ig: parti.filter((s) => s.plat === "instagram").length,
+          dup: 0, bad: 0,
+        },
+        entries: parti.map((s, i) => ({
+          index: i + 1, id: s.kod, platform: s.plat, url: s.url,
+          title: s.baslik || s.url, duration: null, uploader: "", unavailable: false,
+        })),
+      };
+      plLastStatus = null; plLastJob = null; plAnchor = null;
+      $("pl-results").classList.remove("show");
+      $("pl-progress").classList.remove("show");
+      plSel.clear();
+      plData.entries.forEach((e) => plSel.add(e.index));
+      renderRows();
+      showView("download");
+      panel.classList.add("show");
+      showBatchView();
+      updateSelUI();
+
+      const kalan = hepsi.length - parti.length;
+      setMsg(parti.length + " kayıt aktarıldı. Kaliteyi seçip “Seçilenleri indir”e basın." +
+        (kalan ? " Kalan " + kalan + " kayıt kitaplıkta seçili duruyor, ikinci turda indirin." : ""),
+        "info");
+    }
+
+    /* ---- indirme defteri: finishJob'un son satırı ---- */
+    function libMarkFinish(st) {
+      try {
+        if (!st || !st.items || !st.items.length) return;
+        const sonuclar = st.items.map((i) => ({
+          plat: i.platform || "youtube", kod: i.id, durum: i.state,
+          boyut: i.size || null, hata: i.err || null,
+        }));
+        fetch("/api/library/mark", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ job: st.job, sonuclar }),
+        })
+          .then((r) => r.json())
+          .then(() => {
+            // Biten kalemler seçimden düşer: kalan seçim kendiliğinden
+            // "Parti 2" olur, ayrı bir kuyruk mekanizmasına gerek kalmaz.
+            sonuclar.filter((s) => s.durum === "ready")
+              .forEach((s) => libSel.delete(s.plat + ":" + s.kod));
+            libSaveSel(); libUpdateSelbar();
+            if (topView === "library") { libRefresh(); libLoadState(); }
+          })
+          .catch(() => {});
+      } catch (e) { /* kitaplık defteri ASLA indirme akışını bloklamaz */ }
+    }
+
+    /* ---- içe aktarım ---- */
+    async function libImportChunks(kaynak, ad, extId, kayitlar) {
+      const bar = $("lib-import-bar");
+      const bad = $("lib-import-bad");
+      bad.textContent = ""; bad.classList.add("hide");
+      let okunan = 0, eklenen = 0, guncellenen = 0, yinelenen = 0;
+      const reddedilen = [];
+      const toplamParca = Math.ceil(kayitlar.length / LIB_CHUNK);
+
+      for (let p = 0; p < toplamParca; p++) {
+        const dilim = kayitlar.slice(p * LIB_CHUNK, (p + 1) * LIB_CHUNK);
+        // GEÇİCİ KİLİT TEKRARI: AI turu sürerken bir parça "database is locked"
+        // ile 500 alabilir. Yeniden yazma UPSERT sayesinde GÜVENLİDİR; tekrar
+        // denemezsek kalan parçalar hiç gönderilmez ve 951 kaydın yarısı düşer.
+        let d = null, res = null;
+        for (let deneme = 0; deneme < 3; deneme++) {
+          res = await fetch("/api/library/import", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              kaynak, koleksiyon: ad, ext_id: extId, parca: p,
+              son: p === toplamParca - 1, kayitlar: dilim,
+            }),
+          });
+          try { d = await res.json(); } catch (e) { d = null; }
+          if (res.ok && d && d.ok) break;
+          if (res.status < 500 || deneme === 2) break;
+          await new Promise((r) => setTimeout(r, 400 * (deneme + 1)));
+        }
+        if (!res.ok || !d || !d.ok) {
+          throw new Error(((d && d.error) || "İçe aktarım başarısız.") +
+            " (" + p + " / " + toplamParca + " parça yazıldı — tekrar yapıştırıp " +
+            "aktarabilirsiniz, yinelenen kayıt oluşmaz.)");
+        }
+        okunan += d.okunan; eklenen += d.eklenen;
+        guncellenen += d.guncellenen; yinelenen += d.yinelenen;
+        (d.reddedilen || []).forEach((r) => reddedilen.push(r));
+        bar.style.width = Math.round(((p + 1) / toplamParca) * 100) + "%";
+      }
+
+      $("lib-import-sum").textContent =
+        okunan + " kayıt okundu · " + eklenen + " eklendi · " + guncellenen +
+        " güncellendi · " + yinelenen + " yinelenen · " + reddedilen.length + " tanınmadı";
+      if (reddedilen.length) {
+        reddedilen.slice(0, 40).forEach((r) => {
+          const li = document.createElement("li");
+          li.className = "bb-row";
+          const t = document.createElement("span"); t.className = "bb-txt"; t.textContent = r.raw || "";
+          const w = document.createElement("span"); w.className = "bb-why"; w.textContent = r.reason || "";
+          li.appendChild(t); li.appendChild(w); bad.appendChild(li);   // innerHTML ASLA
+        });
+        bad.classList.remove("hide");
+      }
+      libRefresh(); libLoadState();
+    }
+
+    async function libImport() {
+      const ham = $("lib-import-text").value.trim();
+      if (!ham) { libMsg("Önce betiğin ürettiği JSON'u yapıştırın.", "error"); return; }
+      let kayitlar;
+      try {
+        kayitlar = JSON.parse(ham);
+      } catch (e) { libMsg("JSON çözümlenemedi — betiğin çıktısını olduğu gibi yapıştırın.", "error"); return; }
+      if (!Array.isArray(kayitlar) || !kayitlar.length) { libMsg("JSON bir kayıt dizisi olmalı.", "error"); return; }
+
+      const btn = $("lib-import-go");
+      btn.disabled = true;
+      libMsg("İçe aktarılıyor…", "info");
+      try {
+        await libImportChunks("ig_saved", $("lib-import-name").value.trim() || "Kaydedilenler", "", kayitlar);
+        libMsg("İçe aktarım tamamlandı.", "info");
+        $("lib-import-text").value = "";
+      } catch (e) {
+        libMsg(String(e.message || "İçe aktarım başarısız."), "error");
+      } finally { btn.disabled = false; }
+    }
+
+    async function libImportYT() {
+      const url = $("lib-import-yt").value.trim();
+      if (!url) { libMsg("Oynatma listesi adresini yapıştırın.", "error"); return; }
+      const btn = $("lib-import-ytgo");
+      btn.disabled = true;
+      libMsg("Liste çözümleniyor…", "info");
+      try {
+        // MEVCUT uç yeniden kullanılıyor — yeni sunucu kodu YOK. Uç POST-only
+        // ve adresi JSON GÖVDESİNDEN okur (loadPlaylist ile AYNI sözleşme);
+        // sorgu dizesiyle GET atmak 405 + HTML gövde döndürüyordu.
+        const res = await fetch("/api/playlist/list", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        // json() ÇÖZÜMLEMESİ res.ok kontrolünden ÖNCE PATLAMAMALI: uç hata
+        // gövdesini HTML döndürebilir, o zaman da anlamlı mesaj çıksın.
+        let d = null;
+        try { d = await res.json(); } catch (e) { d = null; }
+        if (!res.ok || !d) { libMsg((d && d.error) || "Liste çözümlenemedi.", "error"); return; }
+        const kayitlar = (d.entries || [])
+          .filter((e) => e && e.id && !e.unavailable)
+          .map((e) => ({
+            url: "https://www.youtube.com/watch?v=" + e.id,
+            baslik: e.title || "", kanal: e.uploader || "", sure: e.duration || null,
+          }));
+        if (!kayitlar.length) { libMsg("Listede aktarılabilir video yok.", "error"); return; }
+        const listId = (url.match(/[?&]list=([A-Za-z0-9_-]{2,100})/) || [])[1] || "";
+        await libImportChunks("yt_playlist", d.title || "Oynatma listesi", listId, kayitlar);
+        libMsg(kayitlar.length + " video kitaplığa aktarıldı.", "info");
+        $("lib-import-yt").value = "";
+      } catch (e) {
+        libMsg("Liste aktarılamadı.", "error");
+      } finally { btn.disabled = false; }
+    }
+
+    /* ---- AI kategorilendirme ---- */
+    async function libAiStart(kapsam) {
+      try {
+        const res = await fetch("/api/library/ai/start", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            kapsam: kapsam === "basarisiz" ? "basarisiz"
+                  : kapsam === "yeniden" ? "yeniden" : "kategorisiz",
+          }),
+        });
+        const d = await res.json();
+        if (res.status === 409) { libMsg(d.error || "Kategorilendirme zaten sürüyor.", "error"); libAiPoll(); return; }
+        if (!res.ok) { libMsg(d.error || "Kategorilendirme başlatılamadı.", "error"); return; }
+        if (!d.ok) { libMsg(d.sebep || "Kategorilendirme başlatılamadı.", "info"); return; }
+        libMsg(d.toplam + " gönderi " + d.parti + " partide kategorilendirilecek.", "info");
+        $("lib-ai-bar").classList.add("show");
+        libAiPoll();
+      } catch (e) { libMsg("Kategorilendirme başlatılamadı.", "error"); }
+    }
+
+    // setInterval DEĞİL setTimeout ZİNCİRİ (pollOnce'ın birebir deseni).
+    async function libAiPoll() {
+      clearTimeout(libAiTimer); libAiTimer = null;
+      try { if (libAiCtl) libAiCtl.abort(); } catch (e) {}
+      libAiCtl = new AbortController();
+      const zaman = setTimeout(() => { try { libAiCtl.abort(); } catch (e) {} }, 15000);
+      let d = null;
+      try {
+        const res = await fetch("/api/library/ai/status", { cache: "no-store", signal: libAiCtl.signal });
+        d = await res.json();
+      } catch (e) { /* ağ dalgalanması: bir sonraki turda tekrar denenir */ }
+      clearTimeout(zaman);
+
+      if (d && d.var) {
+        $("lib-ai-fill").style.width = (d.pct || 0) + "%";
+        $("lib-ai-text").textContent =
+          (d.parti || 0) + " / " + (d.parti_toplam || 0) + " parti · " +
+          (d.biten || 0) + " / " + (d.toplam || 0) + " gönderi" +
+          (d.hatali ? " · " + d.hatali + " hatalı" : "");
+        if (d.durum !== "running") {
+          const metin = {
+            done: "Kategorilendirme tamamlandı ✓",
+            cancelled: "Kategorilendirme durduruldu.",
+            paused: "Kategorilendirme duraklatıldı — 'Kategorilendir'e tekrar basıp kaldığı yerden devam edin.",
+            durmus: "Kategorilendirme süreci yanıt vermiyor — tekrar başlatabilirsiniz.",
+            failed: "Kategorilendirme başarısız oldu.",
+          }[d.durum] || "Kategorilendirme bitti.";
+          // HATA SAYISI TAMAMLANMA MESAJINA GİRER. Şerit gizlenince "N hatalı"
+          // yazısı ekrandan siliniyordu: turun TAMAMI başarısız olsa bile
+          // durum "done" kalıp "tamamlandı ✓" deniyor, harcanan para ve
+          // değişmeyen kayıtlar hiçbir iz bırakmıyordu.
+          const hataMetni = d.hatali
+            ? " — " + d.hatali + " kayıt kategorilendirilemedi."
+            : "";
+          libMsg(metin + hataMetni + (d["not"] ? " (" + d["not"] + ")" : ""),
+            (d.durum === "failed" ? "error" : (d.hatali ? "warn" : "info")));
+          $("lib-ai-bar").classList.remove("show");
+          libAiTimer = null;
+          libRefresh(); libLoadState();
+          return;
+        }
+      }
+      libAiTimer = setTimeout(libAiPoll, document.hidden ? 5000 : 2000);
+    }
+
+    /* ---- kapak önbelleği ---- */
+    // kapsam BEYAZ LİSTEDEN geçer (libAiStart'ın birebir deseni). Sabit "eksik"
+    // gönderildiği sürece sunucudaki 'basarisiz' sıfırlama yolu (cover_state=''
+    // + cover_tries=0) hiçbir kullanıcı eyleminden tetiklenemiyordu: üç denemeyi
+    // tüketen kapaklar arayüzden ERİŞİLEMEZ hâle geliyordu.
+    async function libCoverStart(kapsam) {
+      const k = kapsam === "basarisiz" ? "basarisiz"
+              : kapsam === "hepsi" ? "hepsi" : "eksik";
+      try {
+        const res = await fetch("/api/library/covers/start", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ kapsam: k }),
+        });
+        const d = await res.json();
+        if (res.status === 409) {
+          libMsg(d.error || "Kapak indirme zaten sürüyor.", "error");
+          $("lib-cover-bar").classList.add("show"); libCoverPoll(); return;
+        }
+        if (!res.ok) { libMsg(d.error || "Kapak indirme başlatılamadı.", "error"); return; }
+        if (!d.ok) { libMsg(d.sebep || "İndirilecek kapak yok.", "info"); return; }
+        libMsg(d.toplam + " kapak sunucuya indirilecek (ücretsiz).", "info");
+        $("lib-cover-bar").classList.add("show");
+        libCoverPoll();
+      } catch (e) { libMsg("Kapak indirme başlatılamadı.", "error"); }
+    }
+
+    // libAiPoll'ün BİREBİR deseni: setTimeout ZİNCİRİ (setInterval DEĞİL),
+    // 15 sn AbortController zaman aşımı, sekme gizliyse seyrek yoklama.
+    async function libCoverPoll() {
+      clearTimeout(libCoverTimer); libCoverTimer = null;
+      try { if (libCoverCtl) libCoverCtl.abort(); } catch (e) {}
+      libCoverCtl = new AbortController();
+      const zaman = setTimeout(() => { try { libCoverCtl.abort(); } catch (e) {} }, 15000);
+      let d = null;
+      try {
+        const res = await fetch("/api/library/covers/status",
+          { cache: "no-store", signal: libCoverCtl.signal });
+        d = await res.json();
+      } catch (e) { /* ağ dalgalanması: sonraki turda tekrar denenir */ }
+      clearTimeout(zaman);
+
+      if (d && d.var) {
+        $("lib-cover-fill").style.width = (d.pct || 0) + "%";
+        $("lib-cover-text").textContent =
+          (d.biten || 0) + " / " + (d.toplam || 0) + " kapak · " +
+          (d.boyut_mb || 0) + " MB" +
+          (d.hatali ? " · " + d.hatali + " hatalı" : "") +
+          (d.olu ? " · " + d.olu + " yok" : "");
+        if (d.durum !== "running") {
+          const metin = {
+            done: "Kapaklar indirildi ✓",
+            cancelled: "Kapak indirme durduruldu.",
+            paused: "Kapak indirme duraklatıldı — tekrar basınca kaldığı yerden devam eder.",
+            durmus: "Kapak indirme süreci yanıt vermiyor — tekrar başlatabilirsiniz.",
+            failed: "Kapak indirme başarısız oldu.",
+          }[d.durum] || "Kapak indirme bitti.";
+          libMsg(metin + (d["not"] ? " (" + d["not"] + ")" : ""),
+            (d.durum === "failed" ? "error" : "info"));
+          $("lib-cover-bar").classList.remove("show");
+          libCoverTimer = null;
+          libRefresh(); libLoadState();
+          return;
+        }
+      }
+      libCoverTimer = setTimeout(libCoverPoll, document.hidden ? 5000 : 2000);
+    }
+
+    /* ---- ölçüm (0 USD, AI çağrısı YOK) ---- */
+    async function libScan() {
+      const kutu = $("lib-scan-out");
+      kutu.classList.remove("hide");
+      kutu.textContent = "Ölçülüyor…";
+      try {
+        const res = await fetch("/api/library/scan", { cache: "no-store" });
+        const d = await res.json();
+        if (!res.ok || !d.ok) { kutu.textContent = (d && d.error) || "Ölçülemedi."; return; }
+        const liste = (a, n) => (a || []).slice(0, n)
+          .map((x) => x.ad + "(" + x.adet + ")").join("  ");
+        const src = (o) => Object.keys(o || {}).map((k) => k + "=" + o[k]).join(" ");
+        kutu.textContent = [
+          "KAPSAM: " + d.kapsam + " kayıt ('diger' + 'belirsiz')",
+          "  kaynak diger    : " + src((d.kaynak || {}).diger),
+          "  kaynak belirsiz : " + src((d.kaynak || {}).belirsiz),
+          "",
+          "METİNSİZ (12 karakterden kısa): " + d.metinsiz +
+            "  → bunlar TAKSONOMİYLE ÇÖZÜLEMEZ, kutu eklemek metin yaratmaz.",
+          "API'YE GİDECEK: " + d.api_gidecek + "  ≈ " + d.tahmini_usd + " USD",
+          "",
+          "HASHTAG (yeni kategori eşiği: " + d.esik + ")",
+          "  " + liste(d.hashtagler, 60),
+          "",
+          "KELİME",
+          "  " + liste(d.kelimeler, 60),
+          "",
+          "KAPAK HOSTLARI (beyaz liste doğrulaması)",
+          "  " + (d.kapak_hostlari || []).map((x) => x.host + "(" + x.adet + ")").join("  "),
+          "  beyaz liste dışı: " + d.beklenmeyen_host,
+          "  NOT: COVER_HOSTS'a yazarken ALAN KÖKÜNÜ NOKTAYLA yazın " +
+            "(ör. \".cdninstagram.com\"), tam host adını değil.",
+          "",
+          "SIRADAKİ ADIM: sayımı ≥" + d.esik + " olan konular için app.py'deki",
+          "KATEGORILER listesine yeni kod ekleyin, plworker.py'deki ÖRNEKLER",
+          "bloğuna birer örnek yazın, SONRA yeniden sınıflandırmayı çalıştırın.",
+        ].join("\n");
+      } catch (e) { kutu.textContent = "Ölçülemedi."; }
+    }
+
+    /* ---- elle kategori / silme ---- */
+    async function libSetCat() {
+      const ids = [...libSel.values()].map((s) => s.id).filter(Boolean);
+      if (!ids.length) { libMsg("Hiç kayıt seçilmedi.", "error"); return; }
+      try {
+        const res = await fetch("/api/library/category", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: ids.slice(0, 500), kategori: $("lib-setcat-val").value }),
+        });
+        const d = await res.json();
+        if (!res.ok) { libMsg(d.error || "Kategori yazılamadı.", "error"); return; }
+        // Elle atanan kayıt bir daha AI turunda seçilmez (yapısal bağışıklık).
+        libMsg(d.guncellenen + " kaydın kategorisi güncellendi.", "info");
+        libRefresh(); libLoadState();
+      } catch (e) { libMsg("Kategori yazılamadı.", "error"); }
+    }
+
+    async function libDelete() {
+      const ids = [...libSel.values()].map((s) => s.id).filter(Boolean);
+      if (!ids.length) { libMsg("Hiç kayıt seçilmedi.", "error"); return; }
+      if (!confirm(ids.length + " kayıt kitaplıktan silinsin mi?")) return;
+      try {
+        const res = await fetch("/api/library/delete", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: ids.slice(0, 500) }),
+        });
+        const d = await res.json();
+        if (!res.ok) { libMsg(d.error || "Silinemedi.", "error"); return; }
+        libSel.clear(); libSaveSel(); libUpdateSelbar();
+        libMsg(d.silinen + " kayıt silindi.", "info");
+        libRefresh(); libLoadState();
+      } catch (e) { libMsg("Silinemedi.", "error"); }
+    }
+
+    /* ---- dinleyiciler ---- */
+    $("vt-download").addEventListener("click", () => showView("download"));
+    $("vt-library").addEventListener("click", () => showView("library"));
+    // Dosya seçici: 951 kayıtlık JSON'u elle yapıştırmak yerine dosyadan oku.
+    // İçeriği metin kutusuna koyar; aktarımı mevcut (test edilmiş) yol yapar.
+    $("lib-import-file").addEventListener("change", (ev) => {
+      const f = ev.target.files && ev.target.files[0];
+      if (!f) return;
+      const okuyucu = new FileReader();
+      okuyucu.onload = () => {
+        $("lib-import-text").value = String(okuyucu.result || "");
+        const kb = Math.round(f.size / 1024);
+        libMsg(`${f.name} okundu (${kb} KB). Şimdi "Aktar"a basın.`, "info");
+      };
+      okuyucu.onerror = () => libMsg("Dosya okunamadı.", "error");
+      okuyucu.readAsText(f);
+    });
+    $("lib-import-go").addEventListener("click", libImport);
+    $("lib-import-ytgo").addEventListener("click", libImportYT);
+    $("lib-download").addEventListener("click", libToDownload);
+    // addEventListener olayı ilk argüman olarak geçirir; kapsam AÇIKÇA verilir.
+    $("lib-ai").addEventListener("click", () => libAiStart("kategorisiz"));
+    $("lib-ai-retry").addEventListener("click", () => libAiStart("basarisiz"));
+    $("lib-ai-again").addEventListener("click", () => {
+      const n = (libState && libState.ai_yeniden) || 0;
+      const usd = (n * 0.00097).toFixed(2);
+      if (!confirm(n + " kayıt yeniden sınıflandırılacak (≈ " + usd + " USD).\n\n" +
+        "Yeni kategori EKLENMEDİYSE sonuç değişmez, para boşa gider.\n" +
+        "Devam edilsin mi?")) return;
+      libAiStart("yeniden");
+    });
+    $("lib-cover").addEventListener("click", () => libCoverStart(libCoverKapsam));
+    $("lib-scan").addEventListener("click", libScan);
+    $("lib-cover-cancel").addEventListener("click", async () => {
+      try {
+        await fetch("/api/library/covers/cancel", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ iptal: true }),
+        });
+        libMsg("Durdurma isteği gönderildi…", "info");
+      } catch (e) { libMsg("Durdurulamadı.", "error"); }
+    });
+    $("lib-ai-cancel").addEventListener("click", async () => {
+      // JSON gövdesi + Content-Type: uç artık gövde bekliyor (siteler arası
+      // düz <form> POST'u ön-uçuşa takılsın).
+      try {
+        await fetch("/api/library/ai/cancel", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ iptal: true }),
+        });
+        libMsg("Durdurma isteği gönderildi…", "info");
+      }
+      catch (e) { libMsg("Durdurulamadı.", "error"); }
+    });
+    $("lib-setcat").addEventListener("click", libSetCat);
+    $("lib-delete").addEventListener("click", libDelete);
+    $("lib-selclear").addEventListener("click", () => {
+      libSel.clear(); libSaveSel(); libUpdateSelbar();
+    });
+    $("lib-selpage").addEventListener("click", () => {
+      document.querySelectorAll(".lib-card").forEach((el) => {
+        libSel.set(el.dataset.plat + ":" + el.dataset.kod, {
+          id: Number(el.dataset.id), kod: el.dataset.kod, plat: el.dataset.plat,
+          url: el.dataset.url, baslik: (el.querySelector(".lib-desc") || {}).textContent || "",
+        });
+      });
+      libSaveSel(); libUpdateSelbar();
+    });
+    $("lib-more").addEventListener("click", () => {
+      // Boş sayfaya düşüldüyse (kayıt sayısı LIB_DOM_CAP'in tam katı) tek
+      // çıkış yolu başa dönmektir; libRefresh libDone'ı da sıfırlar.
+      if (libShown === 0 && libQ.offset > 0) { libRefresh(); return; }
+      if (libShown >= LIB_DOM_CAP) { $("lib-grid").textContent = ""; libShown = 0; }
+      libLoadMore();
+    });
+    $("lib-search").addEventListener("input", () => {
+      clearTimeout(libSearchTimer);
+      libSearchTimer = setTimeout(() => { libQ.q = $("lib-search").value.trim(); libRefresh(); }, 200);
+    });
+    $("lib-f-plat").addEventListener("click", (ev) => {
+      const p = ev.target.closest(".pill"); if (!p) return;
+      $("lib-f-plat").querySelectorAll(".pill").forEach((x) => x.classList.remove("active"));
+      p.classList.add("active");
+      libQ.plat = p.dataset.plat; libRefresh();
+    });
+    $("lib-f-dl").addEventListener("change", () => { libQ.dl = $("lib-f-dl").value; libRefresh(); });
+    $("lib-sort").addEventListener("change", () => { libQ.sort = $("lib-sort").value; libRefresh(); });
+    $("lib-reset").addEventListener("click", () => {
+      libQ = { q: "", plat: "all", cat: "", dl: "all", col: "", sort: "yeni", offset: 0 };
+      $("lib-search").value = ""; $("lib-f-dl").value = "all"; $("lib-sort").value = "yeni";
+      $("lib-f-plat").querySelectorAll(".pill").forEach((x, i) => x.classList.toggle("active", i === 0));
+      libRefresh(); libLoadState();
+    });
+    $("lib-cats").addEventListener("click", (ev) => {
+      const c = ev.target.closest(".lib-chip"); if (!c) return;
+      libQ.cat = c.dataset.cat;
+      $("lib-cats").querySelectorAll(".lib-chip").forEach((x) => x.classList.remove("active"));
+      c.classList.add("active");
+      libRefresh();
+    });
+
+    // Sonsuz kaydırma. #lib-more HER ZAMAN yedek olarak durur (observer yoksa).
+    if ("IntersectionObserver" in window) {
+      libObserver = new IntersectionObserver((girisler) => {
+        if (topView !== "library") return;
+        if (libShown >= LIB_DOM_CAP) return;      // DOM tavanı: elle devam
+        if (girisler.some((g) => g.isIntersecting)) libLoadMore();
+      }, { rootMargin: "600px" });
+      libObserver.observe($("lib-sentinel"));
+    }
+
+    libLoadSel();
+    libUpdateSelbar();
+    (function libInitView() {
+      let v = "download";
+      try { v = localStorage.getItem("igd_view") || "download"; } catch (e) {}
+      showView(v);
+    })();
+
+    (async function restoreJob() {
+      const m = location.hash.match(/^#job=([0-9a-f]{32})$/);
+      const fromHash = !!m;
+      let job = m ? m[1] : null;
+      if (!job) { try { job = localStorage.getItem("igd_job"); } catch (e) { job = null; } }
+      if (!job || !JOB_RE.test(job)) return;
+      try {
+        const res = await fetch("/api/playlist/status?job=" + job, { cache: "no-store" });
+        if (!res.ok) { try { localStorage.removeItem("igd_job"); } catch (e) {} return; }
+        const st = await res.json();
+        // Bağlantıyla gelinmediyse yalnız SÜREN işe geri bağlan: tek video
+        // indirmek için gelen kullanıcıyı eski bir liste paneliyle karşılamayalım.
+        if (!fromHash && st.state !== "running") {
+          try { localStorage.removeItem("igd_job"); } catch (e) {}
+          return;
+        }
+        rowsFromStatus(st);
+        // Süren/dönen iş HER ZAMAN indirme sekmesinde açılmalı: kalıcı
+        // "igd_view" tercihi kitaplık ise iş görünmeyen bir sekmede ilerlerdi.
+        // kalici=false: bu zorunlu geçiş kullanıcının tercihini SİLMEZ.
+        showView("download", false);
+        panel.classList.add("show");
+        if (st.kind === "links") showBatchView(); else showListView();
+        if (st.state === "running") {
+          plJob = job;
+          lockUI(true);
+          setMsg("Devam eden indirme bulundu, izleniyor…", "info");
+          pollOnce();
+        } else {
+          plLastJob = job;
+          finishJob(st);
+        }
+      } catch (e) { /* sunucu kapalıysa sessiz geç */ }
+    })();
   </script>
 </body>
 </html>

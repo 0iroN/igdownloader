@@ -11,9 +11,19 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
+COPY plworker.py .
 COPY templates ./templates
+
+# Playlist işlerinin geçici çıktısı burada tutulur (compose'da bind mount).
+ENV DOWNLOAD_DIR=/downloads
+RUN mkdir -p /downloads
 
 EXPOSE 8000
 
-# Geliştirme sunucusu değil, üretim için gunicorn. timeout: uzun indirmeler için.
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "180", "app:app"]
+# Geliştirme sunucusu değil, üretim için gunicorn.
+# gthread: senkron worker timeout sayacını yalnız istekler arasında sıfırlar,
+# bu yüzden 180 sn'yi aşan büyük dosya aktarımları worker'ı öldürüyordu.
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", \
+     "--worker-class", "gthread", "--workers", "2", "--threads", "4", \
+     "--timeout", "600", "--graceful-timeout", "30", \
+     "app:app"]

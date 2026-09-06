@@ -1,3 +1,5 @@
 flask>=3.0
 yt-dlp>=2025.0
 gunicorn>=21.0
+# Kitaplık sekmesindeki AI kategorilendirme için (Claude API).
+anthropic>=0.40

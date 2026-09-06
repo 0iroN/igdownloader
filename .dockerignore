@@ -1,5 +1,6 @@
 .claude
 data
+downloads
 cookies.txt
 *.log
 __pycache__

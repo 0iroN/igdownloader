@@ -5,6 +5,23 @@ services:
     ports:
       - "8600:8000"
     restart: unless-stopped
+    # Kendi DNS'imiz: host'un çözücüsüne (systemd-resolved) bağlı kalmayalım.
+    # Laptop uykudan uyandığında Tailscale/MagicDNS ayarı bozulup host DNS'i
+    # çökebiliyor; o durumda bile bu container internete isimle ulaşabilsin.
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    # ANTHROPIC_API_KEY buradan gelir (Kitaplık'taki AI kategorilendirme için).
+    # Dosya data/ altında, yani .gitignore kapsamında — anahtar repoya girmez.
+    # required:false => dosya yoksa servis yine ayağa kalkar, sadece AI kapalı olur.
+    env_file:
+      - path: ./data/api.env
+        required: false
     volumes:
       # cookies.txt'i buraya koyup `docker compose restart` ile etkinleştir.
       - ./data:/data
+      # Playlist işleri buraya yazar. Bind mount ŞART: aksi halde indirilenler
+      # container'ın yazılabilir katmanında birikir ve Excalibur'un KÖK diskini
+      # doldurur (hasar diğer servislere taşar). Burada ise ayrı bir klasörde
+      # kalır, `du -sh downloads/` ile görülür, silinmesi serbesttir.
+      - ./downloads:/downloads
