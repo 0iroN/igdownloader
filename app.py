@@ -737,6 +737,14 @@ def janitor():
         except OSError:
             continue
 
+    # Fotoğraf medya önbelleği (ph_<kod>.json): ömrü dolmuş olanlar.
+    for path in glob.glob(os.path.join(DOWNLOAD_DIR, PHOTO_PREFIX + "*.json")):
+        try:
+            if now - os.path.getmtime(path) >= PHOTO_CACHE_TTL:
+                os.remove(path)
+        except OSError:
+            continue
+
     # Sahipsiz kalmış bayat kilit
     try:
         if os.path.exists(_joblock_path()) and _joblock_stale():
@@ -787,6 +795,13 @@ def api_info():
                 }
             )
 
+    # Instagram: önce medya ucu (tek istek). Yalnız fotoğraflı gönderide yt-dlp
+    # hiç çağrılmaz — "No video formats found!" vereceği ölçüldü. Uç cevap
+    # vermezse (cookies yok vb.) media None olur ve bugünkü yol aynen işler.
+    media = instagram_media_for_url(url) if platform == "instagram" else None
+    if media and media["photos"] and not media["videos"]:
+        return jsonify(_photo_only_info(media))
+
     probe = base_opts()
     if platform == "youtube" and playlist_list_id(url) and not has_video_ref(url):
         # Desteklenmeyen liste türü (mix/WL) ama yine de çıplak liste sayfası:
@@ -797,6 +812,8 @@ def api_info():
         with YoutubeDL(probe) as ydl:
             info = first_entry(ydl.extract_info(url, download=False)) or {}
     except Exception as e:
+        if media and media["photos"]:
+            return jsonify(_photo_only_info(media))
         return jsonify({"error": _friendly_error(e, platform)}), 502
 
     if not info.get("title") and not info.get("id"):
@@ -820,8 +837,27 @@ def api_info():
             "resolutions": offered_resolutions(info),
             "type": "video",
             "playlist_hint": hint,
+            # Karışık carousel (video + fotoğraf): fotoğraf sekmesi de açılır.
+            "photos": _photo_info_json(media) if media and media["photos"] else None,
         }
     )
+
+
+def _photo_only_info(media):
+    count = len(media["photos"])
+    return {
+        "platform": "instagram",
+        "title": media["caption"] or f"{count} fotoğraf",
+        "uploader": media["owner"],
+        # Instagram CDN başka origin'den görsel isteğini engelliyor: önizleme
+        # kendi ucumuzdan (kapak önbelleğiyle aynı ders).
+        "thumbnail": f"api/photo?code={media['code']}&i=0&inline=1",
+        "duration": None,
+        "resolutions": [],
+        "type": "photos",
+        "playlist_hint": None,
+        "photos": _photo_info_json(media),
+    }
 
 
 def build_opts(mode, quality, fmt, outtmpl):
@@ -936,6 +972,239 @@ def _cleanup_token(token):
             os.remove(f)
         except OSError:
             pass
+
+
+# ---------------------------------------------------------------------------
+# Instagram fotoğrafları
+# ---------------------------------------------------------------------------
+# yt-dlp yalnız video çıkarır: fotoğraf gönderisinde "No video formats found!"
+# verir (22.10.2026'da ölçüldü, 3 fotoğraflı carousel). Fotoğrafları
+# Instagram'ın kendi medya ucundan (yt-dlp'nin de girişliyken kullandığı uç)
+# cookies.txt ile alırız. İstek yt-dlp'nin ağ katmanından geçer: çerez
+# kavanozu, vekil, zaman aşımı aynıdır.
+#
+# CDN adresi istemciden ASLA alınmaz (kapak önbelleğindeki SSRF dersi): sunucu
+# medya ucunu kendisi okur ve kısa süre DOWNLOAD_DIR/ph_<kod>.json'a yazar.
+# Önizleme ve indirme tıklamaları Instagram API'sine YENİ istek atmaz, yalnız
+# CDN'den görsel çeker — gönderi başına tek API isteği (hesap riski).
+IG_APP_ID = "936619743392459"
+IG_UA = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/130.0 Safari/537.36"
+)
+PHOTO_PREFIX = "ph_"
+PHOTO_CACHE_TTL = 20 * 60          # medya ucu yanıtının önbellek ömrü
+MAX_PHOTO_BYTES = 30 * 1024 * 1024  # tek görsel üst sınırı
+MAX_PHOTOS = 20                     # Instagram carousel üst sınırı 20
+_IG_CODE_RE = re.compile(r"^[A-Za-z0-9_-]{5,64}$")
+_PHOTO_EXT = {"image/jpeg": "jpg", "image/webp": "webp", "image/png": "png", "image/heic": "heic"}
+
+
+def _photo_cache_path(code):
+    return os.path.join(DOWNLOAD_DIR, f"{PHOTO_PREFIX}{code}.json")
+
+
+def instagram_media(code, force=False):
+    """Gönderinin fotoğrafları: {code, owner, caption, photos:[{url,w,h}], videos}.
+
+    Ağ/giriş hatasında istisna fırlatır; çağıran karar verir.
+    """
+    path = _photo_cache_path(code)
+    if not force:
+        try:
+            if time.time() - os.path.getmtime(path) < PHOTO_CACHE_TTL:
+                with open(path, encoding="utf-8") as f:
+                    return json.load(f)
+        except (OSError, ValueError):
+            pass
+
+    # Modül seviyesinde DEĞİL: yt-dlp bu özel adı değiştirirse yalnız fotoğraf
+    # yolu düşer, plworker'ın `import app` satırı düşmez.
+    from yt_dlp.networking import Request
+    from yt_dlp.extractor.instagram import _id_to_pk
+
+    with YoutubeDL(base_opts()) as ydl:
+        csrf = next((c.value for c in ydl.cookiejar if c.name == "csrftoken"), "")
+        req = Request(
+            f"https://i.instagram.com/api/v1/media/{_id_to_pk(code)}/info/",
+            headers={"X-IG-App-ID": IG_APP_ID, "X-CSRFToken": csrf, "User-Agent": IG_UA},
+        )
+        with ydl.urlopen(req) as res:
+            data = json.loads(res.read(8 * 1024 * 1024))
+
+    item = (data.get("items") or [None])[0]
+    if not item:
+        raise ValueError("empty media response")
+
+    photos, videos = [], 0
+    for part in (item.get("carousel_media") or [item])[:MAX_PHOTOS]:
+        if part.get("video_versions"):
+            videos += 1
+            continue
+        cands = [
+            c for c in (part.get("image_versions2") or {}).get("candidates") or []
+            if cover_host_ok(c.get("url"))
+        ]
+        if not cands:
+            continue
+        best = max(cands, key=lambda c: (c.get("width") or 0) * (c.get("height") or 0))
+        photos.append({"url": best["url"], "w": best.get("width"), "h": best.get("height")})
+
+    out = {
+        "code": code,
+        "owner": str((item.get("user") or {}).get("username") or "")[:60],
+        "caption": str((item.get("caption") or {}).get("text") or "")[:300],
+        "photos": photos,
+        "videos": videos,
+    }
+    tmp = f"{path}.{uuid.uuid4().hex}.tmp"
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(out, f)
+        os.replace(tmp, path)
+    except OSError:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+    return out
+
+
+def instagram_media_for_url(url):
+    """Gönderi bağlantısından instagram_media; tek gönderi değilse ya da
+    medya ucu cevap vermezse None (o zaman bugünkü yt-dlp yolu aynen çalışır)."""
+    ref = instagram_post_ref(url)
+    if not ref or not _IG_CODE_RE.match(ref[1]):
+        return None
+    try:
+        return instagram_media(ref[1])
+    except Exception:  # noqa: BLE001 - fotoğraf yolu video yolunu düşürmemeli
+        return None
+
+
+def _fetch_photo(url):
+    """CDN'den (baytlar, uzantı). Yönlendirme hedefi de beyaz listeden geçer."""
+    from yt_dlp.networking import Request
+
+    if not cover_host_ok(url):
+        raise ValueError("host not allowed")
+    with YoutubeDL(base_opts()) as ydl:
+        with ydl.urlopen(Request(url, headers={"User-Agent": IG_UA})) as res:
+            if not cover_host_ok(getattr(res, "url", url)):
+                raise ValueError("redirect host not allowed")
+            ctype = (res.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+            body = res.read(MAX_PHOTO_BYTES + 1)
+    ext = _PHOTO_EXT.get(ctype)
+    if not ext or len(body) > MAX_PHOTO_BYTES:
+        raise ValueError("not an image or too large")
+    return body, ext
+
+
+def photo_bytes(media, index):
+    """index'inci fotoğraf. İmzalı CDN adresinin süresi dolmuşsa medya ucunu
+    BİR KEZ tazeleyip yeniden dener. Döndürülen: (baytlar, uzantı, media)."""
+    try:
+        body, ext = _fetch_photo(media["photos"][index]["url"])
+        return body, ext, media
+    except Exception:  # noqa: BLE001
+        media = instagram_media(media["code"], force=True)
+        body, ext = _fetch_photo(media["photos"][index]["url"])
+        return body, ext, media
+
+
+def photo_name(media, index, ext):
+    owner = safe_filename_part(media.get("owner") or "instagram", 60)
+    if len(media["photos"]) == 1:
+        return f"{owner}_{media['code']}.{ext}"
+    return f"{owner}_{media['code']}_{index + 1:02d}.{ext}"
+
+
+def photos_zip(media):
+    """Tüm fotoğraflar tek ZIP (STORED: jpg zaten sıkışık). (baytlar, ad)."""
+    import io
+    import zipfile
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as zf:
+        for i in range(len(media["photos"])):
+            body, ext, media = photo_bytes(media, i)
+            zf.writestr(photo_name(media, i, ext), body)
+    owner = safe_filename_part(media.get("owner") or "instagram", 60)
+    return buf.getvalue(), f"{owner}_{media['code']}.zip"
+
+
+def save_instagram_photos(url, dest_dir, prefix):
+    """İşçi için: fotoğrafları <prefix>.<ext> (tek) ya da <prefix>.zip olarak
+    yaz. Yazım .part üzerinden: _pick_file yarım dosyayı asla seçmez."""
+    ref = instagram_post_ref(url)
+    if not ref or not _IG_CODE_RE.match(ref[1]):
+        raise ValueError("not an Instagram post")
+    media = instagram_media(ref[1])
+    if not media["photos"]:
+        raise ValueError("no photos in post")
+    if len(media["photos"]) == 1:
+        body, ext, media = photo_bytes(media, 0)
+    else:
+        body, _name = photos_zip(media)
+        ext = "zip"
+    final = os.path.join(dest_dir, f"{prefix}.{ext}")
+    with open(final + ".part", "wb") as f:
+        f.write(body)
+    os.replace(final + ".part", final)
+    return media
+
+
+def _photo_info_json(media):
+    """/api/info yanıtının fotoğraf parçası."""
+    return {
+        "code": media["code"],
+        "count": len(media["photos"]),
+        "sizes": [[p.get("w"), p.get("h")] for p in media["photos"]],
+    }
+
+
+@app.route("/api/photo")
+def api_photo():
+    """?code=<kısa kod>&i=<sıra|all>[&inline=1]. Yol/adres istemciden gelmez."""
+    code = (request.args.get("code") or "").strip()
+    if not _IG_CODE_RE.match(code):
+        return "Geçersiz gönderi kodu.", 400
+    which = (request.args.get("i") or "all").strip()
+    inline = request.args.get("inline") == "1"
+    try:
+        media = instagram_media(code)
+    except Exception as e:  # noqa: BLE001
+        return _friendly_error(e, "instagram"), 502
+    count = len(media["photos"])
+    if not count:
+        return "Bu gönderide fotoğraf yok.", 404
+
+    index = None
+    if which != "all" or count == 1:
+        try:
+            index = 0 if which == "all" else int(which)
+        except ValueError:
+            index = -1
+        if not 0 <= index < count:
+            return "Geçersiz sıra numarası.", 400
+
+    try:
+        if index is None:
+            body, name = photos_zip(media)
+            mimetype = "application/zip"
+        else:
+            body, ext, media = photo_bytes(media, index)
+            name = photo_name(media, index, ext)
+            mimetype = "image/" + ("jpeg" if ext == "jpg" else ext)
+    except Exception as e:  # noqa: BLE001
+        return _friendly_error(e, "instagram"), 502
+
+    import io
+
+    resp = send_file(io.BytesIO(body), mimetype=mimetype, as_attachment=not inline, download_name=name)
+    if inline:
+        resp.headers["Cache-Control"] = "private, max-age=600"
+    return resp
 
 
 # ===========================================================================

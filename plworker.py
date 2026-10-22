@@ -525,12 +525,25 @@ def run(job_id):
             # bakarız — YouTube tarafındaki son-işlem hataları gerçek arızadır ve
             # doğrulanmış müzik akışının çıktısı değişmemeli.
             if error is not None and platform == "instagram" and _is_media_missing(error):
-                item["state"] = "skipped"
-                item["err"] = "Bu gönderi fotoğraf, ses alınamaz."
                 _sweep_leftovers(files_dir, prefix, None)
-                status["current"] = None
-                save()
-                continue
+                if mode != "video":
+                    item["state"] = "skipped"
+                    item["err"] = "Bu gönderi fotoğraf, ses alınamaz."
+                    status["current"] = None
+                    save()
+                    continue
+                # Video modunda fotoğrafları medya ucundan al: tek fotoğraf
+                # .jpg, carousel .zip. Başarılıysa kalem aşağıdaki normal
+                # "hazır" yolundan (_pick_file + disk muhasebesi) geçer.
+                try:
+                    media = web.save_instagram_photos(video_url, files_dir, prefix)
+                    error = None
+                    if item.get("title_pending"):
+                        item["title"] = (media["caption"] or media["owner"] or item["title"])[:300]
+                        item["title_pending"] = False
+                except Exception as e:  # noqa: BLE001 - girdi bazında izole
+                    _sweep_leftovers(files_dir, prefix, None)
+                    error = e
 
             if error is not None:
                 if _is_botlike(error):
